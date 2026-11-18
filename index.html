@@ -1,1073 +1,1154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VendingGo! - Smart Vending Kiosk</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Firebase JS SDK (App & Realtime Database) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        vending: {
-                            bg: '#f8faf9',
-                            card: '#ffffff',
-                            header: '#1e3a2b',
-                            headerDark: '#12241b',
-                            accent: '#d97706',
-                            accentLight: '#fef3c7',
-                            textDark: '#0f172a',
-                            textMuted: '#64748b',
-                            border: '#e2e8f0'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #0f172a; user-select: none; }
-        .screen { display: flex; flex-direction: column; height: 100%; min-height: 100%; }
-        .hidden { display: none !important; }
-        
-        /* Custom scrollbar for kiosk preview */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        @keyframes dropAnimation {
-            0% { transform: translateY(-120px) scale(0.6) rotate(-10deg); opacity: 0; }
-            60% { transform: translateY(12px) scale(1.08) rotate(3deg); opacity: 1; }
-            80% { transform: translateY(-4px) scale(0.96) rotate(-1deg); }
-            100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-        }
-        .item-drop { animation: dropAnimation 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.8; }
-        }
-        .pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPIC Men's Wear</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0b0b0b; color: #f5f5f5; }
+    .gold-gradient { background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%); }
+    .gold-text { background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .dark-card { background: linear-gradient(145deg, #181818, #111111); border: 1px solid rgba(191, 149, 63, 0.25); }
+    .cream-input { background: #FAF6ED; color: #1A1A1A; border: 1px solid #E6D5B8; }
+    .cream-input::placeholder { color: #8C7A5E; }
+    .modal-backdrop { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-800 antialiased flex items-center justify-center min-h-screen p-0 sm:p-4">
+<body class="flex justify-center items-center min-h-screen p-0 sm:p-4">
 
-    <!-- Outer Device Surround (Simulated Kiosk Box on Desktop) -->
-    <div class="w-full max-w-md bg-white shadow-2xl rounded-none sm:rounded-[36px] overflow-hidden flex flex-col h-screen sm:h-[92vh] sm:max-h-[880px] relative border-0 sm:border-[8px] sm:border-slate-800">
-
-        <!-- Top Header Bar -->
-        <header class="bg-vending-header text-white px-5 py-3.5 flex items-center justify-between shadow-lg shrink-0 z-20 border-b border-emerald-900/40">
-            <div class="flex items-center gap-3 cursor-pointer select-none active:scale-95 transition-transform" onclick="handleSecretHeaderTap()">
-                <div class="bg-white/10 p-2 rounded-2xl flex items-center justify-center overflow-hidden w-10 h-10 border border-white/10 shadow-inner" id="header-icon-container">
-                    <i class="fa-solid fa-box-open text-xl text-amber-400" id="header-icon-default"></i>
-                    <img id="header-custom-img" class="w-full h-full object-contain hidden" src="" alt="Logo">
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-base tracking-wide flex items-center gap-1.5" id="main-header-title">
-                        VendingGo!
-                    </h1>
-                    <p class="text-[11px] text-emerald-200/90 font-medium leading-none" id="header-subtitle">Smart Kiosk Platform</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2.5 py-1 rounded-full border border-emerald-400/30">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
-                </span>
-            </div>
-        </header>
-
-        <!-- Main Content Scrollable Area -->
-        <main class="flex-1 overflow-y-auto relative bg-vending-bg flex flex-col w-full">
-
-            <!-- 1. WELCOME SCREEN -->
-            <div id="welcome-screen" class="screen flex flex-col items-center justify-between px-6 py-8 text-center h-full relative overflow-hidden bg-gradient-to-b from-emerald-900/5 via-vending-bg to-amber-500/5">
-                <div class="absolute -top-16 -right-16 w-52 h-52 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-16 -left-16 w-52 h-52 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div class="my-auto relative z-10 flex flex-col items-center w-full">
-                    <div class="w-28 h-28 bg-gradient-to-tr from-vending-header to-emerald-600 rounded-3xl flex items-center justify-center mb-5 shadow-2xl border-4 border-white transform hover:rotate-3 transition duration-300 overflow-hidden relative group" id="welcome-logo-box">
-                        <i class="fa-solid fa-store text-4xl text-white drop-shadow" id="welcome-logo-default"></i>
-                        <img id="welcome-custom-logo" class="w-full h-full object-cover hidden" src="" alt="Welcome Logo">
-                    </div>
-                    
-                    <div id="welcome-badge-text" class="inline-block bg-emerald-100/80 border border-emerald-200 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest mb-2 shadow-sm">
-                        Welcome to
-                    </div>
-                    <h2 id="welcome-title-text" class="text-3xl font-black mb-1 text-slate-900 tracking-tight leading-tight">Karthik's Shop</h2>
-                    <p id="welcome-subtitle-text" class="text-xs font-bold text-amber-700 tracking-wide uppercase mb-4 bg-amber-100/70 border border-amber-200/60 px-3 py-1 rounded-xl inline-block">VendingGo! Smart Kiosk</p>
-                    <p id="welcome-desc-text" class="text-vending-textMuted text-xs mb-8 max-w-xs leading-relaxed font-medium">Experience lightning-fast smart vending with instant digital UPI payments & laser dispensing.</p>
-                    
-                    <button type="button" onclick="showScreen('catalog-screen')" id="welcome-btn-text" class="w-full max-w-xs bg-vending-header hover:bg-vending-headerDark active:scale-95 text-white font-extrabold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 text-sm tracking-wide group border border-emerald-700 cursor-pointer">
-                        <span id="welcome-btn-label">Start Shopping</span>
-                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                    </button>
-                </div>
-
-                <div class="text-[11px] text-slate-400 font-medium">
-                    Touch screen to begin order
-                </div>
-            </div>
-
-            <!-- 2. CATALOG SCREEN -->
-            <div id="catalog-screen" class="screen hidden flex flex-col h-full w-full">
-                <!-- Search Header -->
-                <div class="p-4 bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="resetKiosk()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 border border-slate-200 cursor-pointer">
-                                <i class="fa-solid fa-house text-emerald-700"></i>
-                                <span>Home</span>
-                            </button>
-                            <h2 id="catalog-title-text" class="font-extrabold text-base text-slate-900">Select Products</h2>
-                        </div>
-                        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-                            <i class="fa-solid fa-signal text-[9px] animate-pulse"></i> Live Stock
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Product Grid -->
-                <div class="p-4 flex-1 overflow-y-auto pb-28">
-                    <div id="product-grid" class="grid grid-cols-2 gap-3 items-stretch">
-                        <!-- Dynamic Products -->
-                    </div>
-                    <div id="no-products-msg" class="hidden text-center py-12">
-                        <i class="fa-solid fa-box-open text-3xl text-slate-300 mb-2"></i>
-                        <p class="text-xs font-semibold text-slate-500">No items available.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. CART SCREEN -->
-            <div id="cart-screen" class="screen hidden p-4 flex flex-col justify-between h-full overflow-y-auto pb-28">
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <h2 class="font-extrabold text-base text-slate-900">Cart Summary</h2>
-                        <button type="button" onclick="clearCart()" class="text-[11px] font-bold text-red-600 hover:text-red-700 cursor-pointer">Clear All</button>
-                    </div>
-                    <div id="cart-items-container" class="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-                        <!-- Dynamic Cart Items -->
-                    </div>
-                </div>
-
-                <div id="cart-summary-box" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mt-4 space-y-2">
-                    <div class="flex justify-between text-xs text-slate-600">
-                        <span>Items Subtotal:</span>
-                        <span id="cart-subtotal-price" class="font-bold text-slate-800">₹0</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-slate-600">
-                        <span>GST (5%):</span>
-                        <span id="cart-tax-price" class="font-bold text-slate-800">₹0</span>
-                    </div>
-                    <div class="border-t border-slate-200 pt-2 flex justify-between items-center text-sm font-extrabold text-slate-900">
-                        <span>Grand Total:</span>
-                        <span id="cart-grand-total" class="text-emerald-600 text-lg">₹0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. PAYMENT SCREEN -->
-            <div id="payment-screen" class="screen hidden px-5 py-5 flex flex-col items-center justify-between text-center h-full overflow-y-auto pb-28">
-                <div class="w-full">
-                    <!-- Countdown Banner -->
-                    <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-2xl mb-3 flex flex-col items-center gap-1 shadow-sm">
-                        <div class="flex items-center gap-2 text-amber-800 text-xs font-extrabold">
-                            <i class="fa-solid fa-clock animate-spin text-amber-600"></i>
-                            <span>Time Left: <span id="timer" class="text-sm text-red-600 font-black">100</span>s</span>
-                        </div>
-                        <div class="w-full bg-amber-200 h-1.5 rounded-full overflow-hidden">
-                            <div id="timer-bar" class="bg-amber-600 h-full w-full transition-all duration-1000"></div>
-                        </div>
-                    </div>
-                    
-                    <h2 class="font-extrabold text-base text-slate-900 mb-0.5">Scan QR to Pay</h2>
-                    
-                    <!-- Timer Urgent Warning Box -->
-                    <div class="bg-red-50 border border-red-200 text-red-700 text-[11px] font-extrabold px-3 py-1.5 rounded-xl mb-3 animate-pulse shadow-sm flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-triangle-exclamation text-xs"></i>
-                        <span>Please Complete Your Payment Before Timer Expires!</span>
-                    </div>
-
-                    <p class="text-[11px] text-slate-500 mb-3">Compatible with PhonePe, Google Pay, Paytm & UPI Apps</p>
-
-                    <!-- Dynamic QR Card -->
-                    <div class="bg-white p-4 rounded-3xl shadow-md border border-slate-200 mb-3 inline-block relative group">
-                        <div id="qr-code-box" class="w-48 h-48 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center p-2 relative overflow-hidden">
-                            <img id="dynamic-qr-img" class="w-40 h-40 object-contain" src="" alt="Dynamic UPI QR Code">
-                            <div class="absolute bottom-1 bg-emerald-700 text-white text-[11px] font-extrabold px-3 py-0.5 rounded-full shadow" id="qr-amount-badge">₹0</div>
-                        </div>
-                    </div>
-
-                    <!-- UPI Quick Launch Badges -->
-                    <div class="flex justify-center gap-2 mb-4">
-                        <span class="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-xl">PhonePe</span>
-                        <span class="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-xl">GPay</span>
-                        <span class="text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 px-2.5 py-1 rounded-xl">Paytm</span>
-                    </div>
-
-                    <button type="button" onclick="retryPaymentCheck()" class="w-full max-w-xs bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-extrabold py-3 px-5 rounded-2xl shadow-lg transition text-xs flex items-center justify-center gap-2 border border-amber-500 cursor-pointer">
-                        <i class="fa-solid fa-rotate-right text-sm"></i>
-                        <span>Re-Check Payment Status (Retry)</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 5. DISPENSING SCREEN -->
-            <div id="dispensing-screen" class="screen hidden p-5 flex flex-col items-center justify-between text-center h-full overflow-y-auto">
-                <div class="w-full flex flex-col items-center my-auto pb-16">
-                    <!-- Sensor Indicator -->
-                    <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-3 shadow-inner border border-emerald-200">
-                        <i class="fa-solid fa-box-open text-3xl text-emerald-600 animate-bounce"></i>
-                    </div>
-                    <h2 class="text-lg font-extrabold text-slate-900 mb-4">Dispensing Items...</h2>
-                    
-                    <!-- Progress Step Monitor -->
-                    <div id="dispense-sensor-status" class="w-full max-w-xs bg-white border border-slate-200 text-slate-800 text-xs font-bold p-3 rounded-2xl mb-3 flex items-center justify-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-circle-notch animate-spin text-emerald-600"></i>
-                        <span id="sensor-status-msg">Product Dropped: 0 / 0</span>
-                    </div>
-
-                    <!-- Hidden Hardware Fault Toggle -->
-                    <input type="checkbox" id="sensor-fault-toggle" class="hidden">
-
-                    <!-- Stuck Alert Box -->
-                    <div id="refund-alert-box" class="w-full max-w-xs bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-3 rounded-2xl mb-4 hidden text-left space-y-1 shadow-sm">
-                        <div class="flex items-center gap-1.5 text-red-800 font-extrabold">
-                            <i class="fa-solid fa-triangle-exclamation text-sm"></i>
-                            <span>Item Jammed / Stuck Detected!</span>
-                        </div>
-                        <p id="stuck-item-details" class="text-[10px] font-normal text-red-600 leading-tight">Product failed to drop across the laser beam sensor.</p>
-                        <div class="inline-block bg-red-600 text-white text-[9px] px-2 py-0.5 rounded font-extrabold uppercase tracking-wider mt-1">
-                            Auto Refund Processed
-                        </div>
-                    </div>
-
-                    <!-- Physical Drop Slot Visualizer -->
-                    <div class="w-full bg-slate-900 border-4 border-slate-700 rounded-3xl p-4 min-h-[140px] flex items-center justify-center gap-3 flex-wrap relative shadow-2xl overflow-hidden mb-3" id="dispensed-items-container">
-                        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/20 pointer-events-none"></div>
-                        <span class="text-[10px] font-bold text-slate-500 absolute top-2 left-3 tracking-widest uppercase">DISPENSING TRAY</span>
-                    </div>
-
-                    <!-- Pickup Instruction Box -->
-                    <div id="collect-products-box" class="w-full bg-emerald-50 border-2 border-emerald-500 rounded-3xl p-6 text-center shadow-lg hidden mb-3">
-                        <i class="fa-solid fa-hand-holding-hand text-4xl text-emerald-600 mb-2 animate-bounce"></i>
-                        <h3 class="text-base font-black text-slate-900">Collect Your Products!</h3>
-                        <p class="text-xs font-bold text-emerald-700 mt-1 mb-4">Please collect your products from the dispensing box tray below.</p>
-                        <button type="button" onclick="resetKiosk()" class="bg-vending-header hover:bg-vending-headerDark active:scale-95 text-white font-extrabold px-6 py-2.5 rounded-2xl text-xs shadow-md transition inline-flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-house"></i>
-                            <span>Back to Home Page</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. RECEIPT SCREEN -->
-            <div id="receipt-screen" class="screen hidden p-5 flex flex-col items-center justify-center text-center h-full overflow-y-auto pb-28">
-                <div class="w-full max-w-xs my-auto flex flex-col items-center">
-                    <div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mb-3 shadow-inner text-emerald-600 border border-emerald-200">
-                        <i class="fa-solid fa-receipt text-2xl"></i>
-                    </div>
-                    <h3 class="font-extrabold text-lg text-slate-900 mb-0.5">Digital Receipt</h3>
-                    <p class="text-xs text-slate-500 mb-2">Thank you for shopping with us!</p>
-                    <p class="text-[10px] text-amber-700 font-extrabold bg-amber-50 px-3 py-1 rounded-full mb-3 border border-amber-200">
-                        Redirecting Home in <span id="receipt-timer">10</span>s...
-                    </p>
-
-                    <!-- Receipt Paper Card -->
-                    <div class="bg-white border border-slate-200 rounded-2xl p-4 w-full text-left text-xs mb-4 shadow-sm relative font-mono">
-                        <div class="flex justify-between border-b border-dashed border-slate-300 pb-2 mb-2 font-bold text-slate-700">
-                            <span>ID: <span id="receipt-tx-id"></span></span>
-                            <span id="receipt-timestamp" class="text-[10px] font-normal text-slate-500"></span>
-                        </div>
-                        <div id="receipt-items-list" class="space-y-1 mb-2"></div>
-                        <div class="border-t border-dashed border-slate-300 pt-2 flex justify-between font-extrabold text-slate-900 text-sm">
-                            <span>Total Paid:</span>
-                            <span id="receipt-final-total" class="text-emerald-600">₹0</span>
-                        </div>
-                    </div>
-
-                    <button type="button" onclick="printReceiptSim()" class="text-xs font-bold text-slate-600 hover:text-slate-800 flex items-center gap-1.5 mb-2 cursor-pointer">
-                        <i class="fa-solid fa-print"></i> Print Simulated Receipt
-                    </button>
-                </div>
-            </div>
-
-            <!-- 7. ADMIN SCREEN -->
-            <div id="admin-screen" class="screen hidden p-4 flex-1 overflow-y-auto">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
-                    <h2 class="font-extrabold text-base text-slate-900">Admin Control Panel</h2>
-                    <button type="button" onclick="showScreen('catalog-screen')" class="bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold px-3 py-1 rounded-xl transition cursor-pointer">
-                        Close
-                    </button>
-                </div>
-
-                <!-- Web Serial USB Status Indicator -->
-                <div class="mb-3 p-3 rounded-2xl bg-slate-100 border border-slate-200 text-xs space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-plug text-slate-400" id="admin-usb-icon"></i>
-                            <span id="admin-usb-status">ESP32 Status: Disconnected</span>
-                        </span>
-                        <button type="button" onclick="connectESP32Serial()" class="text-[10px] bg-slate-800 hover:bg-black text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm cursor-pointer">Connect USB</button>
-                    </div>
-                    <!-- Serial Output Terminal -->
-                    <div class="bg-slate-900 text-emerald-400 p-2 rounded-xl text-[10px] font-mono h-20 overflow-y-auto" id="serial-terminal-log">
-                        > System initialized. Ready for USB Serial output...
-                    </div>
-                </div>
-
-                <!-- Add New Product Form -->
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 mb-4 space-y-2 text-xs shadow-sm">
-                    <h3 class="font-bold text-slate-800">Add New Inventory Item</h3>
-                    <input type="text" id="new-item-name" placeholder="Product Name" class="w-full p-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="new-item-desc" placeholder="Desc (e.g. 330ml)" class="p-2 border rounded-xl">
-                        <select id="new-item-cat" class="p-2 border rounded-xl bg-white font-medium">
-                            <option value="drinks">Drinks</option>
-                            <option value="snacks">Snacks</option>
-                            <option value="sweets">Sweets</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="new-item-price" placeholder="Price (₹)" class="p-2 border rounded-xl">
-                        <input type="number" id="new-item-stock" placeholder="Initial Stock" class="p-2 border rounded-xl">
-                    </div>
-                    <input type="text" id="new-item-img" placeholder="Image URL (Optional)" class="w-full p-2 border rounded-xl">
-                    <button type="button" onclick="addNewProduct()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 rounded-xl transition cursor-pointer">Add Product</button>
-                </div>
-
-                <!-- Admin Products List -->
-                <h3 class="font-bold text-slate-800 text-xs mb-2">Manage Current Catalog</h3>
-                <div id="admin-products-list" class="space-y-3 mb-4"></div>
-
-                <!-- Change Admin PIN -->
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs shadow-sm">
-                    <h3 class="font-bold text-slate-800">Change Admin Security PIN</h3>
-                    <input type="password" id="new-admin-pin" placeholder="Enter New PIN Code" class="w-full p-2 border rounded-xl">
-                    <button type="button" onclick="changeAdminPin()" class="w-full bg-vending-header text-white font-bold py-2 rounded-xl transition cursor-pointer">Update Admin PIN</button>
-                </div>
-            </div>
-
-            <!-- 8. MASTER PANEL SCREEN -->
-            <div id="master-screen" class="screen hidden p-4 flex-1 overflow-y-auto w-full">
-                <div class="flex items-center justify-between mb-3 border-b border-purple-200 pb-2">
-                    <h2 class="font-extrabold text-base text-purple-950">Master System Controls</h2>
-                    <button type="button" onclick="showScreen('catalog-screen')" class="bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold px-3 py-1 rounded-xl transition cursor-pointer">
-                        Close
-                    </button>
-                </div>
-
-                <!-- Web Serial USB Status Indicator (Master Panel) -->
-                <div class="mb-3 p-3 rounded-2xl bg-purple-50 border border-purple-200 text-xs flex items-center justify-between">
-                    <span class="font-bold text-purple-900 flex items-center gap-2">
-                        <i class="fa-solid fa-plug text-purple-400" id="master-usb-icon"></i>
-                        <span id="master-usb-status">ESP32 Status: Disconnected</span>
-                    </span>
-                    <button type="button" onclick="connectESP32Serial()" class="text-[10px] bg-purple-900 hover:bg-purple-950 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm cursor-pointer">Connect USB</button>
-                </div>
-
-                <!-- UI Text & Branding Customizations -->
-                <div class="bg-white p-3.5 rounded-2xl border border-purple-200 mb-4 space-y-2 text-xs shadow-sm">
-                    <h3 class="font-bold text-purple-950 border-b border-purple-100 pb-1">Branding & Welcome Screen Text Overrides</h3>
-                    <div>
-                        <label class="font-bold text-slate-500 text-[10px]">HEADER TITLE:</label>
-                        <input type="text" id="edit-header-title" class="w-full p-1.5 border rounded-lg">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="font-bold text-slate-500 text-[10px]">WELCOME BADGE:</label>
-                            <input type="text" id="edit-welcome-badge" class="w-full p-1.5 border rounded-lg" placeholder="Welcome to">
-                        </div>
-                        <div>
-                            <label class="font-bold text-slate-500 text-[10px]">BUTTON LABEL:</label>
-                            <input type="text" id="edit-welcome-btn" class="w-full p-1.5 border rounded-lg" placeholder="Start Shopping">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="font-bold text-slate-500 text-[10px]">SHOP / MAIN TITLE:</label>
-                        <input type="text" id="edit-welcome-title" class="w-full p-1.5 border rounded-lg" placeholder="Karthik's Shop">
-                    </div>
-                    <div>
-                        <label class="font-bold text-slate-500 text-[10px]">SUBTITLE / TAGLINE:</label>
-                        <input type="text" id="edit-welcome-subtitle" class="w-full p-1.5 border rounded-lg" placeholder="VendingGo! Smart Kiosk">
-                    </div>
-                    <div>
-                        <label class="font-bold text-slate-500 text-[10px]">WELCOME DESCRIPTION:</label>
-                        <textarea id="edit-welcome-desc" rows="2" class="w-full p-1.5 border rounded-lg" placeholder="Description text..."></textarea>
-                    </div>
-                    <div>
-                        <label class="font-bold text-slate-500 text-[10px]">FOOTER TEXT:</label>
-                        <input type="text" id="edit-footer-text" class="w-full p-1.5 border rounded-lg">
-                    </div>
-                    <button type="button" onclick="saveCustomTexts()" class="w-full bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 rounded-xl transition mt-2 cursor-pointer">Save UI Text Settings</button>
-                </div>
-
-                <!-- Master Products List -->
-                <h3 class="font-bold text-slate-800 text-xs mb-2">Master Inventory Override</h3>
-                <div id="master-products-list" class="space-y-3 mb-4"></div>
-
-                <!-- Change Admin PIN (Master Panel Access) -->
-                <div class="bg-white p-3.5 rounded-2xl border border-purple-200 space-y-2 text-xs shadow-sm mb-4">
-                    <h3 class="font-bold text-purple-950">Change Admin Security PIN</h3>
-                    <input type="password" id="master-new-admin-pin" placeholder="Enter New Admin PIN" class="w-full p-2 border rounded-xl">
-                    <button type="button" onclick="changeAdminPinFromMaster()" class="w-full bg-purple-900 hover:bg-purple-950 text-white font-bold py-2 rounded-xl transition cursor-pointer">Update Admin PIN</button>
-                </div>
-            </div>
-
-        </main>
-
-        <!-- Sticky Bottom Navigation Bar -->
-        <nav id="sticky-bottom-bar" class="hidden absolute bottom-9 left-3 right-3 bg-white/95 backdrop-blur-md border border-slate-200 px-4 py-2.5 rounded-2xl shadow-2xl z-30 transition-all duration-300">
-            <div id="bottom-action-container" class="flex items-center justify-between w-full">
-            </div>
-        </nav>
-
-        <!-- Footer Note -->
-        <footer id="app-footer-text" class="w-full bg-slate-100 border-t border-slate-200 pt-2.5 pb-3 px-3 text-center text-[10px] text-slate-500 font-semibold z-10 shrink-0 mt-auto">
-            VendingGo! Smart System &bull; Realtime ESP32 Motor Controller
-        </footer>
-
+  <!-- Mobile Frame Container -->
+  <div class="w-full max-w-[430px] h-[100vh] sm:h-[880px] bg-[#0c0c0c] sm:rounded-[40px] shadow-2xl border-0 sm:border-4 border-[#332814] flex flex-col relative overflow-hidden">
+    
+    <!-- Toast Notification Box -->
+    <div id="toast" class="absolute top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1c1c1c] border border-amber-500 text-amber-300 px-5 py-2.5 rounded-full shadow-2xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none">
+      Message
     </div>
 
-    <!-- SECRET ADMIN PIN AUTH MODAL -->
-    <div id="admin-auth-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center space-y-4 border border-slate-200 relative">
-            <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto text-emerald-700 text-xl shadow-inner">
-                <i class="fa-solid fa-lock"></i>
+    <!-- ==================== 1. LOGIN / REGISTER SCREEN ==================== -->
+    <div id="screen-login" class="flex-1 flex flex-col justify-between p-6 relative overflow-y-auto">
+      <!-- Background glowing decorative circles -->
+      <div class="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-1/2 -right-24 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Top Header / Logo -->
+      <div class="pt-8 text-center flex flex-col items-center">
+        <div class="w-20 h-20 gold-gradient rounded-2xl p-1 shadow-xl shadow-amber-500/10 flex items-center justify-center mb-4 transform hover:scale-105 transition">
+          <div class="w-full h-full bg-[#121212] rounded-xl flex items-center justify-center">
+            <svg class="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+        </div>
+        <h1 class="text-3xl font-black tracking-wider gold-text uppercase">EPIC</h1>
+        <p class="text-xs font-extrabold text-amber-400/90 tracking-widest mt-0.5 uppercase">Men's Wear</p>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span class="text-[11px] font-bold text-stone-400 tracking-wide">Scratch • Win • Earn</span>
+        </div>
+      </div>
+
+      <!-- Login Form Card -->
+      <div class="dark-card rounded-3xl p-6 shadow-xl my-auto">
+        <h2 class="text-lg font-bold text-stone-100 mb-1">Welcome Back!</h2>
+        <p class="text-xs text-stone-400 mb-5">Login with your mobile number to continue</p>
+
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-stone-300 mb-1 uppercase tracking-wider">Mobile Number</label>
+            <div class="cream-input rounded-2xl px-4 py-3 flex items-center gap-3">
+              <span class="text-sm font-bold text-stone-600 border-r border-amber-300 pr-2">+91</span>
+              <input id="loginPhone" type="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" placeholder="Enter 10-digit number" class="w-full bg-transparent text-sm font-bold focus:outline-none" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-stone-300 mb-1 uppercase tracking-wider">Password</label>
+            <div class="cream-input rounded-2xl px-4 py-3 flex items-center justify-between">
+              <input id="loginPassword" type="password" placeholder="Enter password" class="w-full bg-transparent text-sm font-bold focus:outline-none" required />
+              <button type="button" onclick="togglePassword('loginPassword')" class="text-stone-500 hover:text-stone-800 focus:outline-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full gold-gradient hover:opacity-95 text-stone-950 font-black py-3.5 rounded-2xl shadow-lg transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 mt-2">
+            <span>Login</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+
+        <div class="mt-5 text-center">
+          <button type="button" onclick="openModal('registerModal')" class="text-xs font-bold text-amber-400 hover:text-amber-300 underline underline-offset-4 cursor-pointer">
+            Create account
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="text-center pb-2">
+        <p class="text-[11px] text-stone-500">© 2026 EPIC Men's Wear. All rights reserved.</p>
+      </div>
+    </div>
+
+    <!-- ==================== 2. HOME SCREEN ==================== -->
+    <div id="screen-home" class="flex-1 hidden flex-col bg-[#FAF6ED] text-[#1A1A1A] relative overflow-hidden">
+      <!-- App Header -->
+      <div class="bg-[#121212] text-white px-5 pt-6 pb-4 rounded-b-[30px] shadow-lg flex items-center justify-between">
+        <button onclick="toggleSidebar(true)" class="p-2 rounded-xl bg-stone-800/80 hover:bg-stone-700 text-amber-400 transition cursor-pointer">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <div class="flex items-center gap-2">
+          <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-wider gold-text uppercase leading-none">EPIC</span>
+            <span class="text-[9px] font-extrabold text-amber-400/90 tracking-widest uppercase">Men's Wear</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Visible Admin Panel Trigger Button -->
+          <button onclick="openModal('adminModal')" class="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-[11px] transition cursor-pointer shadow">
+            Admin
+          </button>
+          <button onclick="showToast('No new notifications')" class="p-2 rounded-xl bg-stone-800/80 hover:bg-stone-700 text-amber-400 transition cursor-pointer relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Home Content -->
+      <div class="flex-1 overflow-y-auto p-5 pb-24 space-y-5">
+        <!-- Points Card Bar -->
+        <div class="bg-gradient-to-r from-[#1E190E] via-[#2F240C] to-[#1E190E] border border-amber-500/40 rounded-3xl p-5 text-white shadow-xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-amber-300/80 uppercase tracking-widest">Your Balance</p>
+            <h2 id="homePointsDisplay" class="text-3xl font-black gold-text mt-1">₹250</h2>
+          </div>
+          <div class="w-14 h-14 rounded-2xl gold-gradient p-0.5 shadow-lg flex items-center justify-center">
+            <div class="w-full h-full bg-[#121212] rounded-[14px] flex items-center justify-center text-amber-400">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scratch & Win Interactive Card -->
+        <div class="bg-gradient-to-br from-[#1c1c1c] to-[#121212] border-2 border-amber-500/60 rounded-3xl p-5 text-white shadow-2xl relative overflow-hidden">
+          <div class="absolute top-2 right-3 text-amber-400/20 text-6xl font-black pointer-events-none">₹</div>
+          <div class="text-center mb-4">
+            <h3 class="text-xl font-black gold-text tracking-wide uppercase">SCRATCH & WIN</h3>
+            <p class="text-[11px] text-stone-300 mt-0.5">Scratch the card below to reveal your lucky reward!</p>
+          </div>
+
+          <!-- Scratch Canvas Container -->
+          <div class="relative w-full h-36 rounded-2xl overflow-hidden border border-amber-500/40 shadow-inner bg-stone-900 flex items-center justify-center">
+            <!-- Hidden Reward Layer Beneath -->
+            <div id="scratchRewardContent" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-r from-amber-950 to-stone-900 text-center p-4">
+              <span class="text-xs font-bold text-amber-300 uppercase tracking-widest">You Won</span>
+              <span id="scratchRewardAmountText" class="text-3xl font-black gold-text mt-1">₹100</span>
+              <span class="mt-2 text-[11px] font-bold text-emerald-400">Added directly to your wallet!</span>
+            </div>
+            <!-- Scratch Canvas On Top -->
+            <canvas id="scratchCanvas" class="absolute inset-0 w-full h-full cursor-crosshair touch-none"></canvas>
+          </div>
+          <p class="text-[10px] text-center text-stone-400 mt-2 italic">Swipe/Drag or Rub across the card to scratch</p>
+        </div>
+
+        <!-- OR Coupon Code Section -->
+        <div class="bg-white border border-amber-200 rounded-3xl p-5 shadow-sm">
+          <div class="flex items-center justify-center gap-3 mb-3">
+            <div class="h-px bg-stone-200 flex-1"></div>
+            <span class="text-xs font-extrabold text-stone-400 uppercase tracking-widest">OR</span>
+            <div class="h-px bg-stone-200 flex-1"></div>
+          </div>
+          <label class="block text-xs font-extrabold text-stone-800 mb-1.5">Enter Coupon Code</label>
+          <div class="flex gap-2">
+            <input id="couponCodeInput" type="text" placeholder="e.g. EPIC100" class="flex-1 cream-input rounded-2xl px-4 py-3 text-xs font-extrabold uppercase focus:outline-none" />
+            <button onclick="applyCoupon()" class="bg-[#121212] hover:bg-black text-amber-400 font-extrabold px-5 py-3 rounded-2xl text-xs flex items-center gap-1.5 shadow transition cursor-pointer">
+              <span>Add</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav Bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-[#121212] border-t border-amber-500/30 px-6 py-3 flex justify-around items-center z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Home</span>
+        </button>
+        <button onclick="navigateTo('wallet')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Wallet</span>
+        </button>
+        <button onclick="navigateTo('redeemed')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Redeemed</span>
+        </button>
+        <button onclick="navigateTo('profile')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 4. WALLET SCREEN ==================== -->
+    <div id="screen-wallet" class="flex-1 hidden flex-col bg-[#FAF6ED] text-[#1A1A1A] relative overflow-hidden">
+      <!-- Header -->
+      <div class="bg-[#121212] text-white px-5 pt-6 pb-4 rounded-b-[30px] shadow-lg flex items-center justify-between">
+        <button onclick="navigateTo('home')" class="p-2 rounded-xl bg-stone-800 text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 class="text-base font-black tracking-wider uppercase">My Wallet</h2>
+        <div class="w-9"></div>
+      </div>
+
+      <!-- Wallet Content (Shows balance & full transaction history below) -->
+      <div class="flex-1 overflow-y-auto p-5 pb-24 space-y-4">
+        <!-- Main Wallet Balance Card -->
+        <div class="bg-gradient-to-r from-[#1E190E] via-[#2F240C] to-[#1E190E] border border-amber-500/40 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 text-amber-400/10 text-8xl font-black pointer-events-none">₹</div>
+          <p class="text-xs font-bold text-amber-300/80 uppercase tracking-widest">My Wallet</p>
+          <h1 id="walletBalanceDisplay" class="text-4xl font-black gold-text mt-2">₹750</h1>
+          <div class="mt-4 flex items-center gap-2 text-[11px] text-amber-200 font-bold bg-black/30 px-3 py-2 rounded-xl backdrop-blur-sm border border-amber-500/20">
+            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Redeemable at EPIC Men's Wear Store</span>
+          </div>
+        </div>
+
+        <!-- Transaction History Section in Wallet -->
+        <div>
+          <h3 class="text-sm font-extrabold text-stone-900 mb-3 uppercase tracking-wider">Transaction History</h3>
+          <div id="walletTransactionListContainer" class="space-y-2.5">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav Bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-[#121212] border-t border-amber-500/30 px-6 py-3 flex justify-around items-center z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Home</span>
+        </button>
+        <button onclick="navigateTo('wallet')" class="flex flex-col items-center text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21 18v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h12a3 3 0 013 3v1h-9a2 2 0 00-2 2v8a2 2 0 002 2h9zm-9-2h10V8H12v8zm4-5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Wallet</span>
+        </button>
+        <button onclick="navigateTo('redeemed')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Redeemed</span>
+        </button>
+        <button onclick="navigateTo('profile')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 5. REDEEMED TRANSACTIONS SCREEN ==================== -->
+    <div id="screen-redeemed" class="flex-1 hidden flex-col bg-[#FAF6ED] text-[#1A1A1A] relative overflow-hidden">
+      <!-- Header -->
+      <div class="bg-[#121212] text-white px-5 pt-6 pb-4 rounded-b-[30px] shadow-lg flex items-center justify-between">
+        <button onclick="navigateTo('home')" class="p-2 rounded-xl bg-stone-800 text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 class="text-base font-black tracking-wider uppercase">Redeemed History</h2>
+        <div class="w-9"></div>
+      </div>
+
+      <!-- Redeemed List -->
+      <div class="flex-1 overflow-y-auto p-5 pb-24 space-y-3">
+        <div id="redeemedListContainer" class="space-y-3">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+
+      <!-- Bottom Nav Bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-[#121212] border-t border-amber-500/30 px-6 py-3 flex justify-around items-center z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Home</span>
+        </button>
+        <button onclick="navigateTo('wallet')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Wallet</span>
+        </button>
+        <button onclick="navigateTo('redeemed')" class="flex flex-col items-center text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Redeemed</span>
+        </button>
+        <button onclick="navigateTo('profile')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 6. PROFILE SCREEN ==================== -->
+    <div id="screen-profile" class="flex-1 hidden flex-col bg-[#FAF6ED] text-[#1A1A1A] relative overflow-hidden">
+      <!-- Header -->
+      <div class="bg-[#121212] text-white px-5 pt-6 pb-4 rounded-b-[30px] shadow-lg flex items-center justify-between">
+        <button onclick="navigateTo('home')" class="p-2 rounded-xl bg-stone-800 text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 class="text-base font-black tracking-wider uppercase">Profile</h2>
+        <div class="w-9"></div>
+      </div>
+
+      <!-- Profile Content -->
+      <div class="flex-1 overflow-y-auto p-5 pb-24 space-y-5">
+        <!-- User Details Card -->
+        <div class="bg-gradient-to-br from-[#1E190E] via-[#2F240C] to-[#1E190E] text-white rounded-3xl p-6 shadow-xl flex items-center justify-between border border-amber-500/40">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl gold-gradient p-0.5 shadow-md flex items-center justify-center">
+              <div class="w-full h-full bg-[#121212] rounded-[14px] flex items-center justify-center text-amber-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
             </div>
             <div>
-                <h3 class="font-extrabold text-slate-900 text-base">Security Access PIN</h3>
-                <p class="text-[11px] text-slate-500">Enter Admin or Master Access Key</p>
-                <p class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full inline-block mt-1">
-                    Auto closing in <span id="admin-pin-timer">10</span>s
-                </p>
+              <h3 id="profileNameDisplay" class="text-lg font-black gold-text">Karthik Sai</h3>
+              <p id="profilePhoneDisplay" class="text-xs font-bold text-stone-300 mt-0.5">+91 98765 43210</p>
             </div>
-            <input type="password" id="admin-pin-input" maxlength="10" placeholder="••••••••" class="w-full p-3 border-2 border-slate-200 rounded-2xl text-center text-lg font-black tracking-widest focus:border-emerald-500 outline-none">
-            <p id="pin-error-msg" class="text-xs text-red-600 font-bold hidden">Invalid Security PIN!</p>
-            <div class="flex gap-2">
-                <button type="button" onclick="closeAdminAuthModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer">Cancel</button>
-                <button type="button" onclick="verifyAdminPin()" class="w-1/2 bg-vending-header hover:bg-vending-headerDark text-white py-2.5 rounded-xl text-xs font-bold transition cursor-pointer">Verify</button>
-            </div>
+          </div>
+          <button onclick="openModal('editProfileModal')" class="bg-amber-400 hover:bg-amber-300 text-stone-950 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow transition cursor-pointer flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+            <span>Edit</span>
+          </button>
         </div>
+
+        <!-- Menu Options -->
+        <div class="bg-white border border-amber-200 rounded-3xl overflow-hidden shadow-sm">
+          <button onclick="navigateTo('wallet')" class="w-full px-5 py-4 flex items-center justify-between hover:bg-stone-50 transition border-b border-stone-100 cursor-pointer">
+            <div class="flex items-center gap-3.5 text-stone-800">
+              <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+              </div>
+              <span class="text-sm font-extrabold">My Wallet</span>
+            </div>
+            <svg class="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <button onclick="navigateTo('redeemed')" class="w-full px-5 py-4 flex items-center justify-between hover:bg-stone-50 transition border-b border-stone-100 cursor-pointer">
+            <div class="flex items-center gap-3.5 text-stone-800">
+              <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <span class="text-sm font-extrabold">Redeemed History</span>
+            </div>
+            <svg class="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <button onclick="showToast('EPIC Men\'s Wear v2.6 - All systems active')" class="w-full px-5 py-4 flex items-center justify-between hover:bg-stone-50 transition border-b border-stone-100 cursor-pointer">
+            <div class="flex items-center gap-3.5 text-stone-800">
+              <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <span class="text-sm font-extrabold">Settings</span>
+            </div>
+            <svg class="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <button onclick="showToast('Contact Support: support@epicmenswear.com')" class="w-full px-5 py-4 flex items-center justify-between hover:bg-stone-50 transition border-b border-stone-100 cursor-pointer">
+            <div class="flex items-center gap-3.5 text-stone-800">
+              <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <span class="text-sm font-extrabold">Help & Support</span>
+            </div>
+            <svg class="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <button onclick="handleLogout()" class="w-full px-5 py-4 flex items-center justify-between hover:bg-red-50 transition cursor-pointer">
+            <div class="flex items-center gap-3.5 text-red-600">
+              <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+              </div>
+              <span class="text-sm font-extrabold">Logout</span>
+            </div>
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Nav Bar -->
+      <div class="absolute bottom-0 left-0 right-0 bg-[#121212] border-t border-amber-500/30 px-6 py-3 flex justify-around items-center z-20">
+        <button onclick="navigateTo('home')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Home</span>
+        </button>
+        <button onclick="navigateTo('wallet')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Wallet</span>
+        </button>
+        <button onclick="navigateTo('redeemed')" class="flex flex-col items-center text-stone-400 hover:text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Redeemed</span>
+        </button>
+        <button onclick="navigateTo('profile')" class="flex flex-col items-center text-amber-400 cursor-pointer">
+          <svg class="w-5 h-5 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+          </svg>
+          <span class="text-[10px] font-extrabold">Profile</span>
+        </button>
+      </div>
     </div>
 
-    <script>
-        // Initial Default Catalog
-        const DEFAULT_CATALOG = [
-            { id: 'coke', name: 'Coca-Cola Can', category: 'drinks', desc: 'Chilled 330ml Can', price: 40, stock: 8, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=150&auto=format&fit=crop&q=80' },
-            { id: 'lays', name: 'Lays Potato Chips', category: 'snacks', desc: 'Classic Salted 50g', price: 20, stock: 5, img: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=150&auto=format&fit=crop&q=80' },
-            { id: 'choco', name: 'Dark Chocolate Bar', category: 'sweets', desc: 'Rich 70% Cocoa 80g', price: 50, stock: 12, img: 'https://images.unsplash.com/photo-1582176647444-1e1237978633?w=150&auto=format&fit=crop&q=80' },
-            { id: 'biscuit', name: 'Butter Cookies', category: 'snacks', desc: 'Crunchy Butter 100g', price: 30, stock: 10, img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=150&auto=format&fit=crop&q=80' },
-            { id: 'water', name: 'Spring Mineral Water', category: 'drinks', desc: '500ml Chilled Bottle', price: 15, stock: 15, img: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=150&auto=format&fit=crop&q=80' },
-            { id: 'gummy', name: 'Fruity Gummy Bears', category: 'sweets', desc: 'Sweet Chewy Candy 75g', price: 35, stock: 6, img: 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=150&auto=format&fit=crop&q=80' }
-        ];
+    <!-- ==================== SIDEBAR / DRAWER ==================== -->
+    <div id="sidebarOverlay" onclick="toggleSidebar(false)" class="absolute inset-0 bg-black/70 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+    <div id="sidebarDrawer" class="absolute top-0 bottom-0 left-0 w-72 bg-[#121212] text-white z-50 transform -translate-x-full transition-transform duration-300 p-6 flex flex-col justify-between shadow-2xl border-r border-amber-500/30">
+      <div>
+        <div class="flex items-center justify-between pb-6 border-b border-stone-800">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 gold-gradient rounded-xl p-0.5 flex items-center justify-center">
+              <div class="w-full h-full bg-[#121212] rounded-[10px] flex items-center justify-center text-amber-400 font-black">E</div>
+            </div>
+            <div>
+              <h3 class="text-base font-black gold-text uppercase leading-none">EPIC</h3>
+              <p class="text-[8px] font-extrabold text-amber-400 tracking-wider uppercase">Men's Wear</p>
+            </div>
+          </div>
+          <button onclick="toggleSidebar(false)" class="text-stone-400 hover:text-white p-2 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
 
-        let CATALOG = JSON.parse(localStorage.getItem('vending_catalog')) || DEFAULT_CATALOG;
+        <div class="py-6 space-y-2">
+          <button onclick="toggleSidebar(false); navigateTo('home')" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-stone-800 text-stone-200 font-bold text-sm transition cursor-pointer">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span>Home</span>
+          </button>
+          <button onclick="toggleSidebar(false); navigateTo('wallet')" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-stone-800 text-stone-200 font-bold text-sm transition cursor-pointer">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            <span>My Wallet</span>
+          </button>
+          <button onclick="toggleSidebar(false); navigateTo('redeemed')" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-stone-800 text-stone-200 font-bold text-sm transition cursor-pointer">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <span>Redeemed History</span>
+          </button>
+          <button onclick="toggleSidebar(false); navigateTo('profile')" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-stone-800 text-stone-200 font-bold text-sm transition cursor-pointer">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span>Profile</span>
+          </button>
+        </div>
+      </div>
+      <div class="pt-4 border-t border-stone-800 text-center">
+        <p class="text-[11px] text-stone-500">EPIC Men's Wear App v2.6</p>
+      </div>
+    </div>
 
-        let appTexts = JSON.parse(localStorage.getItem('vending_texts')) || {
-            headerTitle: "VendingGo!",
-            headerSub: "Smart Kiosk Platform",
-            headerLogoUrl: "",
-            badge: "Welcome to",
-            title: "Karthik's Shop",
-            subtitle: "VendingGo! Smart Kiosk",
-            welcomeLogoUrl: "",
-            desc: "Experience lightning-fast smart vending with instant digital UPI payments & laser dispensing.",
-            btn: "Start Shopping",
-            catalogTitle: "Select Products",
-            footerText: "VendingGo! Smart System • Realtime ESP32 Motor Controller"
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-[#181818] border border-amber-500/40 rounded-3xl p-6 w-full max-w-xs text-white shadow-2xl relative">
+        <h3 class="text-base font-black gold-text mb-4">Edit Profile</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-stone-400 mb-1 uppercase">Full Name</label>
+            <input id="editNameInput" type="text" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-bold focus:outline-none" />
+          </div>
+          <button onclick="saveProfileChanges()" class="w-full gold-gradient text-stone-950 font-black py-2.5 rounded-xl text-xs mt-2 shadow transition cursor-pointer">Save Changes</button>
+          <button onclick="closeModal('editProfileModal')" class="w-full bg-stone-800 text-stone-300 font-bold py-2 rounded-xl text-xs hover:bg-stone-700 transition cursor-pointer">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-[#181818] border border-amber-500/40 rounded-3xl p-6 w-full max-w-xs text-white shadow-2xl relative">
+        <h3 class="text-base font-black gold-text mb-1">Create Account</h3>
+        <p class="text-xs text-stone-400 mb-4">Enter your details to register</p>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-stone-400 mb-1 uppercase">Full Name</label>
+            <input id="regName" type="text" placeholder="Enter Full Name" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-bold focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-stone-400 mb-1 uppercase">Mobile Number</label>
+            <div class="cream-input rounded-xl px-3 py-2 flex items-center gap-2">
+              <span class="text-xs font-bold text-stone-600 border-r border-amber-300 pr-2">+91</span>
+              <input id="regPhone" type="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" placeholder="10-digit number" class="w-full bg-transparent text-xs font-bold focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-stone-400 mb-1 uppercase">Password</label>
+            <input id="regPassword" type="password" placeholder="Create password (min 4 chars)" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-bold focus:outline-none" />
+          </div>
+          <button type="button" onclick="handleRegister()" class="w-full gold-gradient text-stone-950 font-black py-3 rounded-xl text-xs mt-2 shadow transition cursor-pointer">Register & Login</button>
+          <button type="button" onclick="closeModal('registerModal')" class="w-full bg-stone-800 text-stone-300 font-bold py-2 rounded-xl text-xs hover:bg-stone-700 transition cursor-pointer">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel Modal (?admin=1) -->
+    <div id="adminModal" class="modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-[#FAF6ED] text-[#1A1A1A] border-2 border-amber-500 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-amber-200 mb-4">
+          <div>
+            <h3 class="text-base font-black text-stone-900 uppercase">EPIC Admin Panel</h3>
+            <p class="text-[10px] font-bold text-amber-700">Manage Rewards & User Balances</p>
+          </div>
+          <button onclick="closeModal('adminModal')" class="text-stone-500 hover:text-stone-900 font-bold text-sm p-1 cursor-pointer">✕ Close</button>
+        </div>
+
+        <div id="adminPinGate" class="space-y-3">
+          <label class="block text-xs font-extrabold text-stone-800">Enter Admin PIN (Default: 1234)</label>
+          <input id="adminPinInput" type="password" maxlength="4" placeholder="PIN" class="w-full cream-input rounded-xl px-3 py-2.5 text-xs font-extrabold focus:outline-none" />
+          <button onclick="verifyAdminPin()" class="w-full bg-[#121212] hover:bg-black text-amber-400 font-extrabold py-2.5 rounded-xl text-xs shadow transition cursor-pointer">Unlock Admin Panel</button>
+        </div>
+
+        <div id="adminContent" class="space-y-4 hidden">
+          <!-- 1. Scratch Card Reward Control -->
+          <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+            <label class="text-xs font-extrabold text-stone-800 block">1. Next Scratch Card Reward (₹)</label>
+            <div class="flex gap-2">
+              <input id="adminRewardInput" type="number" placeholder="e.g. 500" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-extrabold focus:outline-none" />
+              <button onclick="adminSetScratchReward()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer">Set</button>
+            </div>
+            <p class="text-[10px] text-stone-500 italic">Forces the next scratch card reward for current user.</p>
+          </div>
+
+          <!-- 2. Add Custom Coupon Code = Points -->
+          <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+            <label class="text-xs font-extrabold text-stone-800 block">2. Add Custom Coupon Code = Amount (₹)</label>
+            <div class="space-y-2">
+              <input id="adminCouponKey" type="text" placeholder="Coupon Name (e.g. EPIC500)" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-extrabold uppercase focus:outline-none" />
+              <input id="adminCouponVal" type="number" placeholder="Amount (e.g. 500)" class="w-full cream-input rounded-xl px-3 py-2 text-xs font-extrabold focus:outline-none" />
+              <button onclick="adminAddCoupon()" class="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-xl py-2 text-xs font-extrabold transition cursor-pointer">Add / Update Coupon</button>
+            </div>
+            <div id="adminCouponList" class="space-y-1.5 max-h-32 overflow-y-auto pt-1"></div>
+          </div>
+
+          <!-- 3. Admin Redeem User Wallet -->
+          <div class="p-3 rounded-2xl bg-red-50/70 border border-red-200 space-y-2">
+            <label class="text-xs font-extrabold text-stone-800 block">3. Redeem User Balance (Admin Only)</label>
+            <div class="cream-input rounded-xl px-3 py-2 flex items-center gap-2 bg-white">
+              <span class="text-xs font-bold text-stone-500 border-r border-amber-300 pr-2">+91</span>
+              <input id="adminRedeemPhone" type="tel" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" placeholder="10-Digit Mobile Number" class="w-full bg-transparent text-xs font-bold focus:outline-none" />
+            </div>
+            <input id="adminRedeemAmount" type="number" min="1" placeholder="Enter Redeem Amount (₹)" class="w-full cream-input bg-white rounded-xl px-3 py-2 text-xs font-extrabold focus:outline-none" />
+            <button type="button" onclick="adminRedeemUserBalance()" class="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl py-2.5 font-extrabold text-xs transition cursor-pointer">Redeem Amount from User</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== APP STATE ====================
+    const savedAccounts = JSON.parse(localStorage.getItem('epic_registered_accounts') || '[]');
+    const savedCoupons = JSON.parse(localStorage.getItem('epic_custom_coupons') || '{"EPIC100": 100, "EPIC500": 500}');
+    const state = {
+      registeredAccounts: savedAccounts,
+      customCoupons: savedCoupons,
+      usedCoupons: JSON.parse(localStorage.getItem('epic_used_coupons') || '[]'),
+      adminPin: '1234',
+      adminLockedReward: null,
+      activePhone: null,
+      user: {
+        name: 'Karthik Sai',
+        phone: '+91 9876543210'
+      },
+      homePoints: 250,
+      walletPoints: 750,
+      currentScratchReward: 100,
+      cardRevealed: false,
+      transactions: [
+        { id: '#583921', title: 'Coupon #583921', date: '17 Nov 2026, 07:45 AM', points: 100, type: 'credit' },
+        { id: '#726415', title: 'Coupon #726415', date: '16 Nov 2026, 09:20 PM', points: 50, type: 'credit' },
+        { id: '#914628', title: 'Coupon #914628', date: '15 Nov 2026, 06:30 PM', points: 500, type: 'credit' },
+        { id: 'REDEEM', title: 'Store Redeem', date: '14 Nov 2026, 05:15 PM', points: 200, type: 'debit' }
+      ]
+    };
+
+    function syncUserStorage() {
+      if (!state.activePhone) return;
+      const idx = state.registeredAccounts.findIndex(acc => acc.phone === state.activePhone);
+      if (idx !== -1) {
+        state.registeredAccounts[idx].homePoints = state.homePoints;
+        state.registeredAccounts[idx].walletPoints = state.walletPoints;
+        state.registeredAccounts[idx].transactions = state.transactions;
+        localStorage.setItem('epic_registered_accounts', JSON.stringify(state.registeredAccounts));
+      }
+    }
+
+    // ==================== UI NAVIGATION ====================
+    function navigateTo(screenId) {
+      ['login', 'home', 'wallet', 'redeemed', 'profile'].forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById(`screen-${screenId}`);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+      updateUI();
+      if (screenId === 'home') {
+        setTimeout(initScratchCard, 50);
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('homePointsDisplay').textContent = `₹${state.homePoints}`;
+      document.getElementById('walletBalanceDisplay').textContent = `₹${state.walletPoints}`;
+      document.getElementById('profileNameDisplay').textContent = state.user.name;
+      document.getElementById('profilePhoneDisplay').textContent = state.user.phone;
+
+      // Render Wallet Transaction History
+      const walletContainer = document.getElementById('walletTransactionListContainer');
+      if (walletContainer) {
+        if (!state.transactions || state.transactions.length === 0) {
+          walletContainer.innerHTML = `<p class="text-xs text-stone-500 text-center py-6">No transactions found.</p>`;
+        } else {
+          walletContainer.innerHTML = state.transactions.map(tx => `
+            <div class="bg-white border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl ${tx.type === 'debit' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-800'} flex items-center justify-center font-bold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="${tx.type === 'debit' ? 'M20 12H4' : 'M12 4v16m8-8H4'}"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-xs font-extrabold text-stone-900">${tx.title}</h4>
+                  <p class="text-[10px] text-stone-500 mt-0.5">${tx.date}</p>
+                </div>
+              </div>
+              <span class="text-xs font-black ${tx.type === 'debit' ? 'text-red-600' : 'text-emerald-600'}">
+                ${tx.type === 'debit' ? '-' : '+'}₹${tx.points}
+              </span>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render Redeemed History (Debit transactions only)
+      const redeemedContainer = document.getElementById('redeemedListContainer');
+      if (redeemedContainer) {
+        const redeemedTxs = state.transactions.filter(tx => tx.type === 'debit');
+        if (redeemedTxs.length === 0) {
+          redeemedContainer.innerHTML = `<p class="text-xs text-stone-500 text-center py-12">No redeemed history found yet.</p>`;
+        } else {
+          redeemedContainer.innerHTML = redeemedTxs.map(tx => `
+            <div class="bg-white border border-amber-200/80 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-xs font-extrabold text-stone-900">${tx.title}</h4>
+                  <p class="text-[10px] text-stone-500 mt-0.5">${tx.date}</p>
+                </div>
+              </div>
+              <span class="text-xs font-black text-red-600">-₹${tx.points}</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none');
+      t.classList.add('opacity-100');
+      setTimeout(() => {
+        t.classList.remove('opacity-100');
+        t.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    function toggleSidebar(open) {
+      const drawer = document.getElementById('sidebarDrawer');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (open) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        drawer.classList.remove('-translate-x-full');
+      } else {
+        overlay.classList.add('opacity-0');
+        drawer.classList.add('-translate-x-full');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'editProfileModal') {
+        document.getElementById('editNameInput').value = state.user.name;
+      }
+      if (id === 'adminModal') {
+        renderAdminCouponList();
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function togglePassword(fieldId) {
+      const input = document.getElementById(fieldId);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    <!-- ==================== AUTHENTICATION ==================== -->
+    function handleLogin(e) {
+      e.preventDefault();
+      const phone = document.getElementById('loginPhone').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      if (phone.length !== 10) {
+        showToast('Please enter a valid 10-digit mobile number!');
+        return;
+      }
+
+      const account = state.registeredAccounts.find(acc => acc.phone === phone);
+      if (!account) {
+        showToast('Create your account first.');
+        openModal('registerModal');
+        document.getElementById('regPhone').value = phone;
+        return;
+      }
+
+      if (account.password !== password) {
+        showToast('Invalid password');
+        return;
+      }
+
+      state.activePhone = account.phone;
+      state.user.name = account.name;
+      state.user.phone = `+91 ${account.phone}`;
+      state.homePoints = typeof account.homePoints === 'number' ? account.homePoints : 0;
+      state.walletPoints = typeof account.walletPoints === 'number' ? account.walletPoints : 0;
+      state.transactions = Array.isArray(account.transactions) ? account.transactions : [];
+      showToast(`Welcome back, ${account.name}!`);
+      navigateTo('home');
+    }
+
+    function handleRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+
+      if (!name) {
+        showToast('Please enter your Full Name!');
+        return;
+      }
+      if (phone.length !== 10) {
+        showToast('Please enter a 10-digit mobile number!');
+        return;
+      }
+      if (password.length < 4) {
+        showToast('Password must be at least 4 characters!');
+        return;
+      }
+
+      const existingIdx = state.registeredAccounts.findIndex(acc => acc.phone === phone);
+      if (existingIdx !== -1) {
+        state.registeredAccounts[existingIdx] = {
+          ...state.registeredAccounts[existingIdx],
+          name,
+          phone,
+          password
         };
+      } else {
+        state.registeredAccounts.push({
+          name,
+          phone,
+          password,
+          homePoints: 0,
+          walletPoints: 0,
+          transactions: []
+        });
+      }
+      localStorage.setItem('epic_registered_accounts', JSON.stringify(state.registeredAccounts));
+      showToast('Account created successfully! Please login.');
+      closeModal('registerModal');
+      document.getElementById('loginPhone').value = phone;
+      document.getElementById('loginPassword').value = password;
+    }
 
-        let adminPinCode = localStorage.getItem('vending_admin_pin') || "9985656800";
-        const masterPinCode = "7013557763";
+    function handleLogout() {
+      state.activePhone = null;
+      navigateTo('login');
+      showToast('Logged out successfully');
+    }
 
-        // ===================================================
-        // FIREBASE CONFIGURATION (REPLACE WITH YOUR KEYS)
-        // ===================================================
-        const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        let db = null;
-        let isFirebaseActive = false;
-
-        // Initialize Firebase
-        try {
-            if (firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-                isFirebaseActive = true;
-                console.log("Firebase Realtime Database Connected Successfully!");
-            }
-        } catch (e) {
-            console.warn("Firebase Init Error/Not configured yet:", e);
+    function saveProfileChanges() {
+      const newName = document.getElementById('editNameInput').value.trim();
+      if (!newName) {
+        showToast('Name cannot be empty!');
+        return;
+      }
+      state.user.name = newName;
+      if (state.activePhone) {
+        const acc = state.registeredAccounts.find(a => a.phone === state.activePhone);
+        if (acc) {
+          acc.name = newName;
+          localStorage.setItem('epic_registered_accounts', JSON.stringify(state.registeredAccounts));
         }
+      }
+      updateUI();
+      closeModal('editProfileModal');
+      showToast('Profile updated successfully!');
+    }
 
-        let cart = {};
-        let activeCategory = 'all';
-        let searchQuery = '';
-        let timerInterval;
-        let secretTapCount = 0;
-        let secretTapTimer = null;
-        let adminModalTimerInterval = null;
-        let serialPort = null;
-        let serialWriter = null;
+    // ==================== SCRATCH CARD LOGIC ====================
+    function initScratchCard() {
+      const canvas = document.getElementById('scratchCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = canvas.offsetWidth || 340;
+      canvas.height = canvas.offsetHeight || 140;
 
-        function saveCatalogLocal() {
-            localStorage.setItem('vending_catalog', JSON.stringify(CATALOG));
-            // Sync to Firebase if connected
-            if (isFirebaseActive && db) {
-                db.ref('vending/catalog').set(CATALOG);
-            }
-        }
+      // Draw Silver Scratch Cover
+      ctx.fillStyle = '#C0C0C0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#686868';
+      ctx.font = 'bold 16px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('SCRATCH & WIN (Rub Here)', canvas.width / 2, canvas.height / 2 + 6);
 
-        // Live Realtime Firebase Sync Listener
-        function initFirebaseListeners() {
-            if (isFirebaseActive && db) {
-                // Listen for Catalog changes across ALL devices
-                db.ref('vending/catalog').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        CATALOG = data;
-                        localStorage.setItem('vending_catalog', JSON.stringify(CATALOG));
-                        renderProducts();
-                        if (!document.getElementById('admin-screen').classList.contains('hidden')) renderAdminProducts();
-                        if (!document.getElementById('master-screen').classList.contains('hidden')) renderMasterProducts();
-                    }
-                });
+      // Determine reward amount
+      if (state.adminLockedReward !== null) {
+        state.currentScratchReward = state.adminLockedReward;
+        state.adminLockedReward = null;
+      } else {
+        const possible = [50, 100, 150, 200, 500];
+        state.currentScratchReward = possible[Math.floor(Math.random() * possible.length)];
+      }
+      document.getElementById('scratchRewardAmountText').textContent = `₹${state.currentScratchReward}`;
 
-                // Listen for UI Text Changes across ALL devices
-                db.ref('vending/texts').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        appTexts = data;
-                        localStorage.setItem('vending_texts', JSON.stringify(appTexts));
-                        applyAppTexts();
-                    }
-                });
-            }
-        }
+      let isDrawing = false;
 
-        function showScreen(screenId) {
-            const screens = ['welcome-screen', 'catalog-screen', 'cart-screen', 'payment-screen', 'dispensing-screen', 'receipt-screen', 'admin-screen', 'master-screen'];
-            screens.forEach(s => {
-                const el = document.getElementById(s);
-                if (el) el.classList.add('hidden');
-            });
-            const targetScreen = document.getElementById(screenId);
-            if (targetScreen) targetScreen.classList.remove('hidden');
+      function scratch(e) {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
 
-            const bottomBar = document.getElementById('sticky-bottom-bar');
-            if (['welcome-screen', 'admin-screen', 'master-screen', 'dispensing-screen'].includes(screenId)) {
-                bottomBar.classList.add('hidden');
-            } else {
-                bottomBar.classList.remove('hidden');
-                updateBottomBar(screenId);
-            }
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, 22, 0, Math.PI * 2, false);
+        ctx.fill();
 
-            if (screenId === 'catalog-screen') {
-                renderProducts();
-            } else if (screenId === 'cart-screen') {
-                renderCart();
-            } else if (screenId === 'payment-screen') {
-                startTimer(100);
-            }
-        }
+        checkScratchProgress(ctx, canvas.width, canvas.height);
+      }
 
-        function updateBottomBar(screenId) {
-            const container = document.getElementById('bottom-action-container');
-            const totalCount = Object.values(cart).reduce((a, b) => a + b, 0);
-            const totals = getCartTotals();
+      canvas.onmousedown = (e) => { isDrawing = true; scratch(e); };
+      canvas.onmousemove = scratch;
+      window.onmouseup = () => { isDrawing = false; };
 
-            if (screenId === 'catalog-screen') {
-                container.innerHTML = `
-                    <div class="flex items-center gap-2.5">
-                        <div class="relative bg-emerald-100 text-emerald-800 p-2 rounded-xl">
-                            <i class="fa-solid fa-cart-shopping text-base"></i>
-                            ${totalCount > 0 ? `<span class="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow">${totalCount}</span>` : ''}
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase leading-none">Cart Total</p>
-                            <p class="text-xs font-extrabold text-slate-800">₹${totals.grandTotal}</p>
-                        </div>
-                    </div>
-                    <button type="button" onclick="showScreen('cart-screen')" class="bg-vending-header hover:bg-vending-headerDark active:scale-95 text-white px-4 py-2 rounded-xl text-xs font-extrabold shadow-md transition flex items-center gap-1.5 ${totalCount === 0 ? 'opacity-40 pointer-events-none' : ''} cursor-pointer">
-                        <span>View Cart</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
-                `;
-            } else if (screenId === 'cart-screen') {
-                container.innerHTML = `
-                    <button type="button" onclick="showScreen('catalog-screen')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-arrow-left text-[10px]"></i> Catalog
-                    </button>
-                    <button type="button" onclick="showScreen('payment-screen')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-5 py-2 rounded-xl text-xs font-extrabold shadow-md transition flex items-center gap-1.5 ${totalCount === 0 ? 'opacity-40 pointer-events-none' : ''} cursor-pointer">
-                        <span>Pay ₹${totals.grandTotal}</span> <i class="fa-solid fa-credit-card text-[10px]"></i>
-                    </button>
-                `;
-            } else if (screenId === 'payment-screen') {
-                container.innerHTML = `
-                    <button type="button" onclick="showScreen('cart-screen')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition w-full text-center cursor-pointer">
-                        <i class="fa-solid fa-xmark mr-1"></i> Cancel Payment
-                    </button>
-                `;
-            } else if (screenId === 'receipt-screen') {
-                container.innerHTML = `
-                    <button type="button" onclick="resetKiosk()" class="bg-vending-header hover:bg-vending-headerDark text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-md transition w-full text-center cursor-pointer">
-                        Finish & Back to Home
-                    </button>
-                `;
-            }
-        }
+      canvas.ontouchstart = (e) => { isDrawing = true; scratch(e); e.preventDefault(); };
+      canvas.ontouchmove = (e) => { scratch(e); e.preventDefault(); };
+      canvas.ontouchend = () => { isDrawing = false; };
+    }
 
-        function filterCategory(cat) {
-            activeCategory = cat;
-            document.querySelectorAll('.cat-pill').forEach(btn => {
-                if (btn.textContent.toLowerCase() === cat) {
-                    btn.className = 'cat-pill bg-slate-800 text-white font-bold text-[11px] px-3 py-1 rounded-xl whitespace-nowrap transition-all shadow-sm';
-                } else {
-                    btn.className = 'cat-pill bg-slate-100 text-slate-600 font-semibold text-[11px] px-3 py-1 rounded-xl whitespace-nowrap hover:bg-slate-200 transition-all';
-                }
-            });
-            renderProducts();
-        }
+    function checkScratchProgress(ctx, width, height) {
+      if (state.cardRevealed) return;
+      const imageData = ctx.getImageData(0, 0, width, height);
+      let transparentPixels = 0;
+      const totalPixels = imageData.data.length / 4;
 
-        function handleSearchFilter() {
-            searchQuery = document.getElementById('catalog-search').value.toLowerCase().trim();
-            renderProducts();
-        }
+      for (let i = 3; i < imageData.data.length; i += 32) {
+        if (imageData.data[i] < 128) transparentPixels++;
+      }
 
-        function renderProducts() {
-            const grid = document.getElementById('product-grid');
-            const noMsg = document.getElementById('no-products-msg');
-            if (!grid) return;
-            grid.innerHTML = '';
+      if (transparentPixels > (totalPixels / 16) * 0.35) {
+        state.cardRevealed = true;
+        ctx.clearRect(0, 0, width, height);
+        // Direct credit to wallet without claim button
+        creditScratchRewardDirectly();
+      }
+    }
 
-            const filtered = CATALOG;
+    function creditScratchRewardDirectly() {
+      const points = state.currentScratchReward;
+      state.homePoints += points;
+      state.walletPoints += points;
 
-            if (filtered.length === 0) {
-                if (noMsg) noMsg.classList.remove('hidden');
-            } else {
-                if (noMsg) noMsg.classList.add('hidden');
-            }
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+        ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-            filtered.forEach(item => {
-                const qty = cart[item.id] || 0;
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl p-3 border border-slate-200 shadow-sm flex flex-col justify-between h-null relative hover:shadow-md transition-shadow';
-                card.innerHTML = `
-                    <div class="flex flex-col">
-                        <div class="h-24 w-full bg-slate-50 rounded-xl flex items-center justify-center p-2 mb-2 overflow-hidden border border-slate-100 shrink-0">
-                            <img src="${item.img}" class="max-h-full max-w-full object-contain transform hover:scale-105 transition-transform" onerror="this.src='https://placehold.co/100x100/1e3a2b/ffffff?text=${encodeURIComponent(item.name)}'">
-                        </div>
-                        <h3 class="font-bold text-xs text-slate-900 leading-tight mb-1 break-words">${item.name}</h3>
-                        <p class="text-[10px] text-slate-500 mb-2 leading-snug break-words">${item.desc || ''}</p>
-                    </div>
-                    <div class="mt-auto pt-1">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-black text-emerald-700 text-xs">₹${item.price}</span>
-                            <span class="text-[9px] ${item.stock > 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'} font-extrabold px-1.5 py-0.5 rounded-md border">
-                                ${item.stock > 0 ? 'Stock: ' + item.stock : 'Out'}
-                            </span>
-                        </div>
-                        ${qty === 0 ? `
-                            <button type="button" onclick="updateCart('${item.id}', 1)" class="w-full bg-vending-header hover:bg-vending-headerDark active:scale-95 text-white font-extrabold py-1.5 rounded-xl text-xs transition shadow-sm ${item.stock === 0 ? 'opacity-40 pointer-events-none' : ''} cursor-pointer">
-                                Add to Cart
-                            </button>
-                        ` : `
-                            <div class="flex items-center justify-between bg-slate-100 rounded-xl p-1 border border-slate-200">
-                                <button type="button" onclick="updateCart('${item.id}', -1)" class="w-6 h-6 bg-white rounded-lg flex items-center justify-center font-bold text-xs shadow-sm hover:bg-slate-50 cursor-pointer">-</button>
-                                <span class="font-extrabold text-xs text-slate-800">${qty}</span>
-                                <button type="button" onclick="updateCart('${item.id}', 1)" class="w-6 h-6 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs shadow-sm hover:bg-emerald-700 ${qty >= item.stock ? 'opacity-40 pointer-events-none' : ''} cursor-pointer">+</button>
-                            </div>
-                        `}
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
+      state.transactions.unshift({
+        id: '#SCRATCH' + Math.floor(Math.random() * 899999 + 100000),
+        title: 'Scratch Card Reward',
+        date: dateStr,
+        points: points,
+        type: 'credit'
+      });
 
-            updateBottomBar('catalog-screen');
-        }
+      syncUserStorage();
+      showToast(`Won ₹${points}! Added to wallet.`);
+    }
 
-        function updateCart(productId, change) {
-            const item = CATALOG.find(i => i.id === productId);
-            if (!item) return;
+    // ==================== COUPON SYSTEM ====================
+    function applyCoupon() {
+      const input = document.getElementById('couponCodeInput');
+      const code = input.value.trim().toUpperCase();
+      if (!code) {
+        showToast('Please enter a coupon code!');
+        return;
+      }
 
-            const currentQty = cart[productId] || 0;
-            const newQty = currentQty + change;
+      if (state.usedCoupons.includes(code)) {
+        showToast('This coupon has already been used!');
+        return;
+      }
 
-            if (newQty <= 0) {
-                delete cart[productId];
-            } else if (newQty <= item.stock) {
-                cart[productId] = newQty;
-            }
+      if (state.customCoupons[code] !== undefined) {
+        const reward = state.customCoupons[code];
+        state.homePoints += reward;
+        state.walletPoints += reward;
+        state.usedCoupons.push(code);
+        localStorage.setItem('epic_used_coupons', JSON.stringify(state.usedCoupons));
 
-            renderProducts();
-            if (!document.getElementById('cart-screen').classList.contains('hidden')) {
-                renderCart();
-            }
-        }
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+          ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-        function clearCart() {
-            cart = {};
-            renderProducts();
-            renderCart();
-        }
+        state.transactions.unshift({
+          id: code,
+          title: `Coupon #${code}`,
+          date: dateStr,
+          points: reward,
+          type: 'credit'
+        });
 
-        function getCartTotals() {
-            let subtotal = 0;
-            for (const [id, qty] of Object.entries(cart)) {
-                const item = CATALOG.find(i => i.id === id);
-                if (item) subtotal += item.price * qty;
-            }
-            const tax = Math.round(subtotal * 0.05);
-            return { subtotal, tax, grandTotal: subtotal + tax };
-        }
+        syncUserStorage();
+        input.value = '';
+        showToast(`Coupon applied! ₹${reward} added to wallet.`);
+        updateUI();
+      } else {
+        showToast('Invalid or expired coupon code!');
+      }
+    }
 
-        function renderCart() {
-            const container = document.getElementById('cart-items-container');
-            if (!container) return;
-            container.innerHTML = '';
+    // ==================== ADMIN PANEL LOGIC (?admin=1) ====================
+    function verifyAdminPin() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (pin === state.adminPin) {
+        document.getElementById('adminPinGate').classList.add('hidden');
+        document.getElementById('adminContent').classList.remove('hidden');
+        showToast('Admin access granted!');
+      } else {
+        showToast('Incorrect Admin PIN!');
+      }
+    }
 
-            const keys = Object.keys(cart);
-            if (keys.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-400 text-xs py-10 font-medium">
-                        <i class="fa-solid fa-basket-shopping text-2xl mb-2 text-slate-300"></i>
-                        <p>Your cart is empty!</p>
-                    </div>`;
-            } else {
-                keys.forEach(id => {
-                    const item = CATALOG.find(i => i.id === id);
-                    const qty = cart[id];
-                    const div = document.createElement('div');
-                    div.className = 'flex items-center justify-between bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm';
-                    div.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <img src="${item.img}" class="w-10 h-10 object-contain rounded-lg bg-slate-50 p-1 border">
-                            <div>
-                                <h4 class="font-bold text-xs text-slate-900">${item.name}</h4>
-                                <p class="text-[10px] text-emerald-700 font-black">₹${item.price} × ${qty} = ₹${item.price * qty}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="updateCart('${item.id}', -1)" class="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-xs text-slate-700 hover:bg-slate-200 cursor-pointer">-</button>
-                            <span class="font-extrabold text-xs px-1">${qty}</span>
-                            <button type="button" onclick="updateCart('${item.id}', 1)" class="w-6 h-6 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs shadow-sm hover:bg-emerald-700 ${qty >= item.stock ? 'opacity-40 pointer-events-none' : ''} cursor-pointer">+</button>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-            }
+    function adminSetScratchReward() {
+      const val = parseInt(document.getElementById('adminRewardInput').value, 10);
+      if (isNaN(val) || val < 0) {
+        showToast('Enter valid reward amount!');
+        return;
+      }
+      state.adminLockedReward = val;
+      document.getElementById('adminRewardInput').value = '';
+      showToast(`Next scratch card reward locked to ₹${val}!`);
+    }
 
-            const totals = getCartTotals();
-            document.getElementById('cart-subtotal-price').textContent = `₹${totals.subtotal}`;
-            document.getElementById('cart-tax-price').textContent = `₹${totals.tax}`;
-            document.getElementById('cart-grand-total').textContent = `₹${totals.grandTotal}`;
-            document.getElementById('qr-amount-badge').textContent = `₹${totals.grandTotal}`;
+    function adminAddCoupon() {
+      const key = document.getElementById('adminCouponKey').value.trim().toUpperCase();
+      const val = parseInt(document.getElementById('adminCouponVal').value, 10);
+      if (!key || isNaN(val) || val <= 0) {
+        showToast('Enter valid coupon code and amount!');
+        return;
+      }
+      state.customCoupons[key] = val;
+      localStorage.setItem('epic_custom_coupons', JSON.stringify(state.customCoupons));
+      document.getElementById('adminCouponKey').value = '';
+      document.getElementById('adminCouponVal').value = '';
+      renderAdminCouponList();
+      showToast(`Coupon ${key} = ₹${val} added!`);
+    }
 
-            generateDynamicQR(totals.grandTotal);
-        }
+    function renderAdminCouponList() {
+      const listContainer = document.getElementById('adminCouponList');
+      if (!listContainer) return;
+      const entries = Object.entries(state.customCoupons);
+      if (entries.length === 0) {
+        listContainer.innerHTML = `<p class="text-[10px] text-stone-500">No active custom coupons.</p>`;
+        return;
+      }
+      listContainer.innerHTML = entries.map(([k, v]) => `
+        <div class="flex items-center justify-between bg-white px-3 py-1.5 rounded-xl border border-amber-200 text-xs">
+          <span class="font-bold text-stone-800">${k} : ₹${v}</span>
+          <button onclick="adminRemoveCoupon('${k}')" class="text-red-500 font-bold hover:text-red-700 cursor-pointer">Delete</button>
+        </div>
+      `).join('');
+    }
 
-        function generateDynamicQR(amount) {
-            const upiId = "vendinggo@razorpay";
-            const payeeName = encodeURIComponent("Karthik Shop Vending");
-            const upiString = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR&tn=VendingGo_Order`;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
-            const qrImg = document.getElementById('dynamic-qr-img');
-            if (qrImg) qrImg.src = qrUrl;
-        }
+    function adminRemoveCoupon(key) {
+      delete state.customCoupons[key];
+      localStorage.setItem('epic_custom_coupons', JSON.stringify(state.customCoupons));
+      renderAdminCouponList();
+      showToast(`Coupon ${key} removed.`);
+    }
 
-        async function connectESP32Serial() {
-            if ('serial' in navigator) {
-                try {
-                    serialPort = await navigator.serial.requestPort();
-                    await serialPort.open({ baudRate: 115200 });
-                    serialWriter = serialPort.writable.getWriter();
-                    
-                    updateUSBStatus(true);
-                    logTerminal("USB Serial Connected to ESP32 at 115200 baud.");
-                } catch (err) {
-                    alert("USB Serial Connection Failed: " + err.message);
-                }
-            } else {
-                alert("Web Serial API is not supported in this browser. Please test in Chrome.");
-            }
-        }
+    function adminRedeemUserBalance() {
+      const phoneInput = document.getElementById('adminRedeemPhone');
+      const amtInput = document.getElementById('adminRedeemAmount');
+      const phone = phoneInput.value.trim();
+      const amount = parseInt(amtInput.value, 10);
 
-        function updateUSBStatus(isConnected) {
-            const adminStatus = document.getElementById('admin-usb-status');
-            const adminIcon = document.getElementById('admin-usb-icon');
-            const masterStatus = document.getElementById('master-usb-status');
-            const masterIcon = document.getElementById('master-usb-icon');
+      if (phone.length !== 10) {
+        showToast('Enter valid 10-digit user mobile number!');
+        return;
+      }
+      if (isNaN(amount) || amount <= 0) {
+        showToast('Enter valid redeem amount!');
+        return;
+      }
 
-            if (isConnected) {
-                if(adminStatus) { adminStatus.textContent = "ESP32 Status: Connected (USB)"; adminStatus.className = "text-emerald-700 font-bold"; }
-                if(adminIcon) adminIcon.className = "fa-solid fa-usb text-emerald-600";
-                if(masterStatus) { masterStatus.textContent = "ESP32 Status: Connected (USB)"; masterStatus.className = "text-purple-800 font-bold"; }
-                if(masterIcon) masterIcon.className = "fa-solid fa-usb text-purple-600";
-            }
-        }
+      const accIdx = state.registeredAccounts.findIndex(acc => acc.phone === phone);
+      if (accIdx === -1) {
+        showToast('User account not found!');
+        return;
+      }
 
-        async function sendESP32Command(command) {
-            logTerminal(`[TX]: ${command}`);
-            if (serialWriter) {
-                try {
-                    const data = new TextEncoder().encode(command + "\n");
-                    await serialWriter.write(data);
-                } catch (e) {
-                    console.error("Serial write error:", e);
-                }
-            }
-        }
+      const targetAcc = state.registeredAccounts[accIdx];
+      const currentBal = typeof targetAcc.walletPoints === 'number' ? targetAcc.walletPoints : 0;
 
-        function logTerminal(msg) {
-            const term = document.getElementById('serial-terminal-log');
-            if (term) {
-                term.innerHTML += `<div>> ${msg}</div>`;
-                term.scrollTop = term.scrollHeight;
-            }
-        }
+      if (currentBal < amount) {
+        showToast(`Insufficient balance! User has ₹${currentBal}`);
+        return;
+      }
 
-        function handleSecretHeaderTap() {
-            secretTapCount++;
-            if (secretTapTimer) clearTimeout(secretTapTimer);
-            
-            secretTapTimer = setTimeout(() => {
-                secretTapCount = 0;
-            }, 1200);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+        ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-            if (secretTapCount >= 3) {
-                secretTapCount = 0;
-                clearTimeout(secretTapTimer);
-                openAdminAuthModal();
-            }
-        }
+      const redeemTx = {
+        id: 'REDEEM',
+        title: 'Store Redeem (Admin)',
+        date: dateStr,
+        points: amount,
+        type: 'debit'
+      };
 
-        function openAdminAuthModal() {
-            document.getElementById('admin-pin-input').value = '';
-            document.getElementById('pin-error-msg').classList.add('hidden');
-            document.getElementById('admin-auth-modal').classList.remove('hidden');
+      targetAcc.walletPoints = currentBal - amount;
+      targetAcc.homePoints = Math.max(0, (targetAcc.homePoints || 0) - amount);
+      targetAcc.transactions = Array.isArray(targetAcc.transactions) ? targetAcc.transactions : [];
+      targetAcc.transactions.unshift(redeemTx);
 
-            startAdminModalAutoCloseTimer(10);
-        }
+      localStorage.setItem('epic_registered_accounts', JSON.stringify(state.registeredAccounts));
 
-        function startAdminModalAutoCloseTimer(seconds) {
-            let left = seconds;
-            const display = document.getElementById('admin-pin-timer');
-            if (display) display.textContent = left;
+      if (state.activePhone === phone) {
+        state.walletPoints = targetAcc.walletPoints;
+        state.homePoints = targetAcc.homePoints;
+        state.transactions = targetAcc.transactions;
+        updateUI();
+      }
 
-            if (adminModalTimerInterval) clearInterval(adminModalTimerInterval);
-            adminModalTimerInterval = setInterval(() => {
-                left--;
-                if (display) display.textContent = left;
-                if (left <= 0) {
-                    closeAdminAuthModal();
-                }
-            }, 1000);
-        }
+      phoneInput.value = '';
+      amtInput.value = '';
+      showToast(`Redeemed ₹${amount} from +91 ${phone}!`);
+    }
 
-        function closeAdminAuthModal() {
-            if (adminModalTimerInterval) clearInterval(adminModalTimerInterval);
-            document.getElementById('admin-auth-modal').classList.add('hidden');
-        }
-
-        function verifyAdminPin() {
-            const inputPin = document.getElementById('admin-pin-input').value.trim();
-            const errorMsg = document.getElementById('pin-error-msg');
-
-            if (inputPin === adminPinCode) {
-                closeAdminAuthModal();
-                renderAdminProducts();
-                showScreen('admin-screen');
-            } else if (inputPin === masterPinCode) {
-                closeAdminAuthModal();
-                renderMasterProducts();
-                populateMasterTexts();
-                showScreen('master-screen');
-            } else {
-                errorMsg.classList.remove('hidden');
-            }
-        }
-
-        function renderAdminProducts() {
-            const container = document.getElementById('admin-products-list');
-            if (!container) return;
-            container.innerHTML = '';
-
-            CATALOG.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'bg-white p-3 rounded-2xl border border-slate-200 space-y-2 text-xs shadow-sm';
-                div.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <img src="${item.img}" class="w-10 h-10 object-contain rounded-lg bg-slate-50 p-1 border">
-                        <input type="text" value="${item.name}" onchange="updateProductField('${item.id}', 'name', this.value)" class="p-1.5 border rounded-lg flex-1 font-bold">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-slate-400 font-bold">DESCRIPTION:</label>
-                        <input type="text" value="${item.desc || ''}" onchange="updateProductField('${item.id}', 'desc', this.value)" class="p-1.5 border rounded-lg w-full text-xs">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-[9px] text-slate-400 font-bold">PRICE (₹):</label>
-                            <input type="number" value="${item.price}" onchange="updateProductField('${item.id}', 'price', parseFloat(this.value))" class="p-1.5 border rounded-lg w-full font-bold text-emerald-700">
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 font-bold">STOCK:</label>
-                            <input type="number" value="${item.stock}" onchange="updateProductField('${item.id}', 'stock', parseInt(this.value))" class="p-1.5 border rounded-lg w-full font-bold">
-                        </div>
-                    </div>
-                    <button type="button" onclick="deleteProduct('${item.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-700 font-bold py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1 border border-red-200 cursor-pointer">
-                        <i class="fa-solid fa-trash text-[10px]"></i> Delete Item
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function renderMasterProducts() {
-            const container = document.getElementById('master-products-list');
-            if (!container) return;
-            container.innerHTML = '';
-
-            CATALOG.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'bg-white p-3 rounded-2xl border border-purple-200 space-y-2 text-xs shadow-sm';
-                div.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <img src="${item.img}" class="w-10 h-10 object-contain rounded-lg bg-slate-50 p-1 border">
-                        <input type="text" value="${item.name}" onchange="updateProductField('${item.id}', 'name', this.value)" class="p-1.5 border rounded-lg flex-1 font-bold">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-[9px] text-slate-400 font-bold">PRICE (₹):</label>
-                            <input type="number" value="${item.price}" onchange="updateProductField('${item.id}', 'price', parseFloat(this.value))" class="p-1.5 border rounded-lg w-full font-bold">
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 font-bold">STOCK:</label>
-                            <input type="number" value="${item.stock}" onchange="updateProductField('${item.id}', 'stock', parseInt(this.value))" class="p-1.5 border rounded-lg w-full font-bold">
-                        </div>
-                    </div>
-                    <button type="button" onclick="deleteProduct('${item.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-700 font-bold py-1.5 rounded-lg text-xs transition border border-red-200 cursor-pointer">
-                        Delete Product
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function updateProductField(id, field, value) {
-            const item = CATALOG.find(i => i.id === id);
-            if (item) {
-                item[field] = value;
-                saveCatalogLocal();
-                renderProducts();
-            }
-        }
-
-        function addNewProduct() {
-            const name = document.getElementById('new-item-name').value.trim();
-            const desc = document.getElementById('new-item-desc').value.trim();
-            const cat = document.getElementById('new-item-cat').value;
-            const price = parseFloat(document.getElementById('new-item-price').value);
-            const stock = parseInt(document.getElementById('new-item-stock').value);
-            const img = document.getElementById('new-item-img').value.trim() || 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=150&auto=format&fit=crop&q=80';
-
-            if (!name || isNaN(price) || isNaN(stock)) {
-                alert('Please enter valid product name, price, and stock quantity!');
-                return;
-            }
-
-            const id = 'item_' + Date.now();
-            CATALOG.push({ id, name, category: cat, desc, price, stock, img });
-            saveCatalogLocal();
-
-            document.getElementById('new-item-name').value = '';
-            document.getElementById('new-item-desc').value = '';
-            document.getElementById('new-item-price').value = '';
-            document.getElementById('new-item-stock').value = '';
-            document.getElementById('new-item-img').value = '';
-
-            renderAdminProducts();
-            renderProducts();
-        }
-
-        function deleteProduct(id) {
-            CATALOG = CATALOG.filter(i => i.id !== id);
-            delete cart[id];
-            saveCatalogLocal();
-            renderAdminProducts();
-            renderMasterProducts();
-            renderProducts();
-        }
-
-        function changeAdminPin() {
-            const newPin = document.getElementById('new-admin-pin').value.trim();
-            if (newPin.length < 4) {
-                alert('PIN must be at least 4 digits');
-                return;
-            }
-            adminPinCode = newPin;
-            localStorage.setItem('vending_admin_pin', newPin);
-            document.getElementById('new-admin-pin').value = '';
-            alert('Admin Security PIN updated successfully!');
-        }
-
-        function changeAdminPinFromMaster() {
-            const newPin = document.getElementById('master-new-admin-pin').value.trim();
-            if (newPin.length < 4) {
-                alert('PIN must be at least 4 digits');
-                return;
-            }
-            adminPinCode = newPin;
-            localStorage.setItem('vending_admin_pin', newPin);
-            document.getElementById('master-new-admin-pin').value = '';
-            alert('Admin Security PIN updated successfully from Master Panel!');
-        }
-
-        function populateMasterTexts() {
-            if(document.getElementById('edit-header-title')) document.getElementById('edit-header-title').value = appTexts.headerTitle || '';
-            if(document.getElementById('edit-welcome-badge')) document.getElementById('edit-welcome-badge').value = appTexts.badge || '';
-            if(document.getElementById('edit-welcome-title')) document.getElementById('edit-welcome-title').value = appTexts.title || '';
-            if(document.getElementById('edit-welcome-subtitle')) document.getElementById('edit-welcome-subtitle').value = appTexts.subtitle || '';
-            if(document.getElementById('edit-welcome-desc')) document.getElementById('edit-welcome-desc').value = appTexts.desc || '';
-            if(document.getElementById('edit-welcome-btn')) document.getElementById('edit-welcome-btn').value = appTexts.btn || '';
-            if(document.getElementById('edit-footer-text')) document.getElementById('edit-footer-text').value = appTexts.footerText || '';
-        }
-
-        function saveCustomTexts() {
-            const headerTitle = document.getElementById('edit-header-title')?.value;
-            const badge = document.getElementById('edit-welcome-badge')?.value;
-            const title = document.getElementById('edit-welcome-title')?.value;
-            const subtitle = document.getElementById('edit-welcome-subtitle')?.value;
-            const desc = document.getElementById('edit-welcome-desc')?.value;
-            const btn = document.getElementById('edit-welcome-btn')?.value;
-            const footerText = document.getElementById('edit-footer-text')?.value;
-            
-            if (headerTitle !== undefined) appTexts.headerTitle = headerTitle;
-            if (badge !== undefined) appTexts.badge = badge;
-            if (title !== undefined) appTexts.title = title;
-            if (subtitle !== undefined) appTexts.subtitle = subtitle;
-            if (desc !== undefined) appTexts.desc = desc;
-            if (btn !== undefined) appTexts.btn = btn;
-            if (footerText !== undefined) appTexts.footerText = footerText
+    // ==================== INITIALIZATION ON LOAD ====================
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('admin') === '1') {
+        openModal('adminModal');
+      }
+    };
+  </script>
+</body>
+</html>
