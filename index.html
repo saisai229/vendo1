@@ -249,12 +249,11 @@
           <!-- Dynamic QR Code Box -->
           <div class="bg-neutral-50 p-4 rounded-2xl border-2 border-dashed border-orange-200 flex flex-col items-center justify-center">
             <div id="dynamic-qr-container" class="w-40 h-40 bg-white rounded-xl shadow-sm p-2 flex items-center justify-center relative">
-              <!-- Mock QR Code SVG -->
-              <svg class="w-full h-full text-neutral-900" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2 2h8v8H2V2m2 2v4h4V4H4m8-2h8v8h-8V2m2 2v4h4V4h-4M2 14h8v8H2v-8m2 2v4h4v-4H4m12-2h2v2h-2v-2m4 0h2v2h-2v-2m-4 4h2v2h-2v-2m4 0h2v2h-2v-2m-8-2h2v4h-2v-4Z"/>
-              </svg>
+              <!-- Dynamic Fixed-Amount UPI QR Image -->
+              <img id="upi-qr-image" src="" alt="Scan UPI QR" class="w-full h-full object-contain rounded-lg" />
             </div>
-            <span class="text-[11px] font-bold text-neutral-700 mt-2">Waiting for UPI Payment...</span>
+            <span id="upi-id-display" class="text-[10px] font-mono text-neutral-500 mt-1.5"></span>
+            <span class="text-[11px] font-bold text-neutral-700 mt-1">Waiting for UPI Payment...</span>
           </div>
 
           <div class="space-y-2">
@@ -433,6 +432,14 @@
 
   <!-- JavaScript Application Logic -->
   <script>
+    // ==================== USER UPI & WEBHOOK CONFIGURATION ====================
+    // ఇక్కడ మీ అసలైన UPI ID ఎంటర్ చేయండి (ఉదా: 9876543210@ybl లేదా merchant@okicici)
+    const MERCHANT_UPI_ID = "yourname@upi";
+    const MERCHANT_NAME = "VenduPro Kiosk";
+    // మీ Vercel Webhook Status Endpoint URL (IFTTT POST రిక్వెస్ట్ అందుకున్న తర్వాత స్టేటస్ చెక్ చేయడానికి)
+    const VERCEL_PAYMENT_STATUS_URL = "/api/check-payment";
+    // =========================================================================
+
     const URL_PARAMS = new URLSearchParams(window.location.search);
     let IS_ADMIN_MODE = URL_PARAMS.has('admin') ? URL_PARAMS.get('admin') === '1' : false;
     const ADMIN_PASSWORD = '1234567890';
@@ -460,10 +467,13 @@
     let cart = {}; // { productId: qty }
     let activeCategory = 'All';
     let currentOrderTotal = 0;
+    let paymentCheckInterval = null;
+    let currentOrderTimestamp = 0;
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSavedConfig();
       applySiteLabels();
+      setupIftttWebhookListener();
       if (IS_ADMIN_MODE) {
         switchTab('admin');
         renderAdminProductsList();
@@ -476,6 +486,12 @@
     });
 
     function switchTab(tabName) {
+      // పేమెంట్ స్క్రీన్ నుండి బయటకు వెళ్తే బ్యాక్‌గ్రౌండ్ చెకింగ్ ఆపడం
+      if (tabName !== 'payment' && paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+        paymentCheckInterval = null;
+      }
+
       ['home', 'menu', 'cart', 'payment', 'dispense', 'admin'].forEach(t => {
         const el = document.getElementById(`view-${t}`);
         if (el) el.classList.add('hidden');
@@ -689,10 +705,88 @@
 
     function proceedToPayment() {
       document.getElementById('qr-amount-text').textContent = `Amount: ₹${currentOrderTotal}`;
+      
+      // కార్ట్ లో ఉన్న ఫిక్స్డ్ అమౌంట్ తో UPI Payment URI జనరేట్ చేయడం
+      const formattedAmount = Number(currentOrderTotal).toFixed(2);
+      const upiUri = `upi://pay?pa=${encodeURIComponent(MERCHANT_UPI_ID)}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${formattedAmount}&cu=INR`;
+      
+      // డైనమిక్ QR కోడ్ ఇమేజ్ సెట్ చేయడం
+      const qrImg = document.getElementById('upi-qr-image');
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
+      }
+      const upiDisplay = document.getElementById('upi-id-display');
+      if (upiDisplay) {
+        upiDisplay.textContent = `UPI: ${MERCHANT_UPI_ID}`;
+      }
+
+      currentOrderTimestamp = Date.now();
       switchTab('payment');
+      startListeningForVercelWebhook();
+    }
+
+    // IFTTT -> Vercel Webhook నుండి వచ్చే పేమెంట్ సక్సెస్ సిగ్నల్ కోసం లిజనర్
+    function startListeningForVercelWebhook() {
+      if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+
+      // ప్రతి 2.5 సెకన్లకు Vercel API నుండి IFTTT SMS పేమెంట్ వచ్చిందో లేదో చెక్ చేస్తుంది
+      paymentCheckInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${VERCEL_PAYMENT_STATUS_URL}?amount=${currentOrderTotal}&since=${currentOrderTimestamp}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // IFTTT పంపిన మెసేజ్ లోని అమౌంట్ & పేమెంట్ సక్సెస్ అయితే వెంటనే Dispense పేజీకి వెళ్తుంది
+            if (data && (data.paid === true || data.status === 'success') && Number(data.amount) === Number(currentOrderTotal)) {
+              clearInterval(paymentCheckInterval);
+              paymentCheckInterval = null;
+              simulatePaymentSuccess();
+            }
+          }
+        } catch (err) {
+          // Vercel API ఇంకా కనెక్ట్ కాకపోయినా లేదా నెట్‌వర్క్ ఆలస్యమైనా సైలెంట్‌గా మళ్ళీ ప్రయత్నిస్తుంది
+        }
+      }, 2500);
+    }
+
+    // ఒకవేళ IFTTT లేదా Vercel నుండి నేరుగా postMessage / CustomEvent ద్వారా POST డేటా పంపితే వెంటనే ట్రిగ్గర్ అవ్వడానికి
+    function setupIftttWebhookListener() {
+      window.addEventListener('message', (event) => {
+        handleIncomingWebhookPayload(event.data);
+      });
+      window.addEventListener('ifttt-payment-webhook', (event) => {
+        handleIncomingWebhookPayload(event.detail);
+      });
+    }
+
+    function handleIncomingWebhookPayload(payload) {
+      if (!payload || document.getElementById('view-payment').classList.contains('hidden')) return;
+      
+      // IFTTT SMS టెక్స్ట్ లేదా JSON నుండి అమౌంట్ గుర్తించడం (ఉదా: "200" లేదా { amount: 200, status: "success" })
+      let receivedAmount = null;
+      if (typeof payload === 'object' && payload.amount) {
+        receivedAmount = Number(payload.amount);
+      } else if (typeof payload === 'string') {
+        const match = payload.match(/(\d+(\.\d+)?)/);
+        if (match) receivedAmount = Number(match[1]);
+      }
+
+      if (receivedAmount !== null && receivedAmount === Number(currentOrderTotal)) {
+        if (paymentCheckInterval) {
+          clearInterval(paymentCheckInterval);
+          paymentCheckInterval = null;
+        }
+        simulatePaymentSuccess();
+      }
     }
 
     function simulatePaymentSuccess() {
+      if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+        paymentCheckInterval = null;
+      }
       switchTab('dispense');
       startSequentialDispense();
     }
