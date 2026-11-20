@@ -22,18 +22,18 @@
           },
           boxShadow: {
             'card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
-            'orange': '0 10px 20px -5px rgba(255, 94, 0, 0.4)',
+            'green': '0 10px 20px -5px rgba(22, 163, 74, 0.35)',
           }
         }
       }
     }
   </script>
   <style>
-    .orange-gradient {
-      background: linear-gradient(135deg, #FF7E21 0%, #FF5E00 100%);
+    .green-gradient {
+      background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
     }
     .hero-bg {
-      background: linear-gradient(180deg, #FFF6F0 0%, #FFFFFF 100%);
+      background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%);
     }
     /* Hide scrollbar for clean horizontal scrolling */
     .no-scrollbar::-webkit-scrollbar {
@@ -53,24 +53,24 @@
     <!-- Top Sticky Header -->
     <header class="bg-white/90 backdrop-blur-md px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 z-30">
       <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('home')">
-        <div class="w-9 h-9 orange-gradient rounded-xl flex items-center justify-center text-white shadow-orange">
+        <div class="w-9 h-9 green-gradient rounded-xl flex items-center justify-center text-white shadow-green">
           <i data-lucide="zap" class="w-5 h-5"></i>
         </div>
         <div>
-          <h1 class="font-display font-bold text-base text-neutral-900 tracking-tight brand-name-text">Vendu<span class="text-[#FF5E00]">Pro</span></h1>
+          <h1 class="font-display font-bold text-base text-neutral-900 tracking-tight brand-name-text">Vendu<span class="text-[#16A34A]">Pro</span></h1>
           <span class="text-[9px] text-neutral-400 font-medium block -mt-1">Smart Kiosk IoT</span>
         </div>
       </div>
       
       <!-- Right Header Actions: Cart Shortcut in Top Right Corner & Admin -->
       <div class="flex items-center gap-2">
-        <button onclick="openEsp32Modal()" class="relative p-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF5E00] transition hidden" title="ESP32 IoT Status">
+        <button onclick="openEsp32Modal()" class="relative p-2 rounded-xl bg-green-50 hover:bg-green-100 text-[#16A34A] transition hidden" title="ESP32 IoT Status">
           <i data-lucide="cpu" class="w-5 h-5"></i>
           <span class="absolute -top-1 -right-1 bg-emerald-500 w-2.5 h-2.5 rounded-full border-2 border-white animate-pulse"></span>
         </button>
         <button id="header-cart-btn" onclick="switchTab('cart')" class="relative p-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition" title="Cart">
           <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-          <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#FF5E00] text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm hidden">0</span>
+          <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#16A34A] text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm hidden">0</span>
         </button>
       </div>
     </header>
@@ -81,40 +81,50 @@
       <!-- ==================== TAB 1: HOME SCREEN ==================== -->
       <section id="view-home" class="min-h-full flex flex-col justify-between hero-bg p-5 pb-6">
         <div class="mt-2">
-          <h1 id="label-home-title1" class="font-display font-extrabold text-[32px] leading-[1.12] text-neutral-900 tracking-tight">
-            Smart Vending<br/>
-            <span class="text-[#FF5E00]">Made Easy!</span>
-          </h1>
-          <p id="label-home-subtitle" class="text-neutral-600 text-xs mt-2 leading-relaxed max-w-[260px]">
-            Grab your favorite snacks and drinks anytime, anywhere.
-          </p>
+          <!-- MY Dr. Logo Card -->
+          <div class="bg-white rounded-3xl p-4 shadow-card border border-green-100 inline-flex items-center justify-center">
+            <img id="home-brand-logo" src="15985_2.jpg" alt="MY Dr. Logo" class="h-16 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('mydr-svg-logo').classList.remove('hidden');" />
+            <svg id="mydr-svg-logo" class="hidden h-14 w-auto" viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+              <text x="10" y="68" font-family="Georgia, serif" font-weight="bold" font-size="64" fill="#236133" letter-spacing="1">MY Dr</text>
+              <circle cx="242" cy="63" r="6.5" fill="#236133"/>
+              <!-- Red Figure -->
+              <circle cx="250" cy="20" r="4.5" fill="#C81E2B"/>
+              <path d="M232 18 Q247 28 251 46 Q253 28 266 18 Q253 24 250 28 Q246 24 232 18 Z" fill="#C81E2B"/>
+              <!-- Green Leaves -->
+              <path d="M251 49 Q264 38 273 45 Q265 56 251 49 Z" fill="#82BC41"/>
+              <path d="M251 49 Q244 43 239 46 Q244 51 251 49 Z" fill="#82BC41"/>
+              <text x="272" y="20" font-family="Arial, sans-serif" font-size="10" fill="#555">®</text>
+            </svg>
+          </div>
 
           <div class="mt-4 flex items-center gap-2.5">
-            <button onclick="switchTab('menu')" class="orange-gradient text-white font-display font-bold text-sm px-6 py-3.5 rounded-2xl shadow-orange flex items-center gap-2 hover:opacity-95 transition transform active:scale-95">
+            <button onclick="switchTab('menu')" class="green-gradient text-white font-display font-bold text-sm px-6 py-3.5 rounded-2xl shadow-green flex items-center gap-2 hover:opacity-95 transition transform active:scale-95">
               Browse Menu <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            <button onclick="openAdminLockModal()" class="bg-white hover:bg-neutral-50 text-neutral-700 border border-gray-200 font-display font-bold text-xs px-4 py-3.5 rounded-2xl shadow-card flex items-center gap-1.5 transition">
+              <i data-lucide="shield-check" class="w-4 h-4 text-[#16A34A]"></i> Admin
             </button>
           </div>
         </div>
 
-        <!-- Clean Vending Machine Illustration Banner -->
-        <div class="my-6 relative bg-gradient-to-br from-orange-100/60 to-amber-50 rounded-3xl p-5 border border-orange-200/50 flex items-center justify-between shadow-card overflow-hidden">
-          <div class="space-y-1.5 max-w-[170px] z-10">
-            <span class="inline-block px-2.5 py-0.5 rounded-full bg-[#FF5E00]/10 text-[#FF5E00] font-bold text-[10px]">VenduPro Kiosk</span>
-            <h3 class="font-display font-bold text-sm text-neutral-900">Grab Your Favourites</h3>
-            <p class="text-[11px] text-neutral-500 leading-snug">Fresh snacks &amp; drinks delivered instantly.</p>
+        <!-- My Doctor Pain Items Banner -->
+        <div class="my-6 relative bg-gradient-to-br from-green-100/70 to-emerald-50 rounded-3xl p-5 border border-green-200/60 flex items-center justify-between shadow-card overflow-hidden">
+          <div class="space-y-1.5 max-w-[180px] z-10">
+            <span class="inline-block px-2.5 py-0.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] font-bold text-[10px]">MY Dr.</span>
+            <h3 class="font-display font-extrabold text-base text-neutral-900 leading-snug">My Doctor Pain Items</h3>
           </div>
           <!-- Vending Machine Graphic Card -->
           <div class="w-24 h-32 bg-neutral-900 rounded-2xl p-2 relative shadow-xl flex flex-col justify-between border-2 border-neutral-800 shrink-0">
             <div class="flex justify-between items-center px-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-[8px] text-orange-400 font-mono font-bold">VENDUPRO</span>
+              <span class="text-[8px] text-emerald-400 font-mono font-bold">MY Dr.</span>
             </div>
             <div class="grid grid-cols-2 gap-1 bg-neutral-800 p-1.5 rounded-lg">
-              <div class="bg-amber-400/90 h-5 rounded flex items-center justify-center text-[8px] font-bold text-neutral-900 shadow-sm">SNACK</div>
-              <div class="bg-red-500 h-5 rounded flex items-center justify-center text-[8px] font-bold text-white shadow-sm">DRINK</div>
+              <div class="bg-emerald-400/90 h-5 rounded flex items-center justify-center text-[8px] font-bold text-neutral-900 shadow-sm">BALM</div>
+              <div class="bg-green-600 h-5 rounded flex items-center justify-center text-[8px] font-bold text-white shadow-sm">RELIEF</div>
             </div>
             <div class="h-4 bg-neutral-950 rounded flex items-center justify-center border border-neutral-800">
-              <div class="w-8 h-1 bg-orange-500 rounded-full"></div>
+              <div class="w-8 h-1 bg-green-500 rounded-full"></div>
             </div>
           </div>
         </div>
@@ -122,896 +132,998 @@
         <!-- Value Badges -->
         <div class="grid grid-cols-2 gap-3 pb-2">
           <div class="bg-white p-3 rounded-2xl shadow-card border border-gray-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-orange-50 text-[#FF5E00] flex items-center justify-center shrink-0">
+            <div class="w-9 h-9 rounded-xl bg-green-50 text-[#16A34A] flex items-center justify-center shrink-0">
               <i data-lucide="zap" class="w-4 h-4"></i>
             </div>
             <div>
-              <h4 class="font-display font-bold text-xs text-neutral-900">Instant Access</h4>
-              <p class="text-[10px] text-neutral-400">Tap &amp; select</p>
+              <span class="font-display font-bold text-xs text-neutral-800 block">Instant Dispense</span>
+              <span class="text-[10px] text-neutral-400">Auto-drop in 3s</span>
             </div>
           </div>
-
           <div class="bg-white p-3 rounded-2xl shadow-card border border-gray-100 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <div class="w-9 h-9 rounded-xl bg-green-50 text-[#16A34A] flex items-center justify-center shrink-0">
+              <i data-lucide="qr-code" class="w-4 h-4"></i>
             </div>
             <div>
-              <h4 class="font-display font-bold text-xs text-neutral-900">Secure Payment</h4>
-              <p class="text-[10px] text-neutral-400">Dynamic UPI QR</p>
+              <span class="font-display font-bold text-xs text-neutral-800 block">UPI Auto-Verify</span>
+              <span class="text-[10px] text-neutral-400">Dynamic QR code</span>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ==================== TAB 2: MENU SCREEN ==================== -->
-      <section id="view-menu" class="hidden p-5 pb-28">
-        <!-- Top Navigation Pills (Home & Menu only) -->
-        <div class="flex items-center justify-between gap-2 bg-white p-1.5 rounded-full shadow-card border border-gray-100 mb-4">
-          <button onclick="switchTab('home')" class="flex-1 py-2 rounded-full text-xs font-bold text-neutral-600 hover:text-[#FF5E00] flex items-center justify-center gap-1.5 transition">
+      <section id="view-menu" class="min-h-full p-5 pb-24 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 id="label-menu-title" class="font-display font-extrabold text-xl text-neutral-900">Our <span class="text-[#16A34A]">Menu</span></h2>
+            <p id="label-menu-subtitle" class="text-xs text-neutral-500">Choose your item</p>
+          </div>
+          <button onclick="switchTab('home')" class="px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold flex items-center gap-1 transition">
             <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
           </button>
-          <button onclick="switchTab('menu')" class="flex-1 py-2 rounded-full text-xs font-bold orange-gradient text-white shadow-sm flex items-center justify-center gap-1.5 transition">
-            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Menu
-          </button>
         </div>
 
-        <div class="flex items-start justify-between">
-          <div>
-            <h2 id="label-menu-title" class="font-display font-extrabold text-[26px] text-neutral-900 leading-tight">
-              Our <span class="text-[#FF5E00]">Menu</span>
-            </h2>
-            <p id="label-menu-subtitle" class="text-xs text-neutral-500 mt-0.5">Choose from a variety of snacks &amp; drinks</p>
-          </div>
+        <!-- Search Input -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input id="search-input" type="text" oninput="filterMenu()" placeholder="Search item or slot (e.g. P1, Balm)..." class="w-full bg-neutral-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#16A34A]/40" />
         </div>
 
-        <!-- Search Bar -->
-        <div class="mt-4 relative">
-          <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400"></i>
-          <input type="text" id="search-input" oninput="filterMenu()" placeholder="Search items..." class="w-full bg-neutral-100 rounded-2xl pl-10 pr-4 py-3 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/50 transition"/>
-        </div>
-
-        <!-- Categories Filter -->
-        <div id="category-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar mt-3 pb-1">
-          <!-- Populated by JS -->
-        </div>
+        <!-- Category Pills (kept for compatibility, single category) -->
+        <div id="category-pills" class="flex gap-2 overflow-x-auto no-scrollbar hidden"></div>
 
         <!-- Products Grid -->
-        <div id="products-grid" class="grid grid-cols-2 gap-3 mt-4">
+        <div id="products-grid" class="grid grid-cols-2 gap-3">
           <!-- Populated by JS -->
         </div>
       </section>
 
-      <!-- ==================== TAB 3: MY CART SCREEN ==================== -->
-      <section id="view-cart" class="hidden p-5 pb-28 flex flex-col min-h-full">
-        <!-- Top Navigation Pills (Home & Menu only) -->
-        <div class="flex items-center justify-between gap-2 bg-white p-1.5 rounded-full shadow-card border border-gray-100 mb-4">
-          <button onclick="switchTab('home')" class="flex-1 py-2 rounded-full text-xs font-bold text-neutral-600 hover:text-[#FF5E00] flex items-center justify-center gap-1.5 transition">
-            <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-          </button>
-          <button onclick="switchTab('menu')" class="flex-1 py-2 rounded-full text-xs font-bold text-neutral-600 hover:text-[#FF5E00] flex items-center justify-center gap-1.5 transition">
-            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Menu
-          </button>
-        </div>
-
-        <div class="flex items-center justify-between mb-4">
+      <!-- ==================== TAB 3: CART SCREEN ==================== -->
+      <section id="view-cart" class="min-h-full p-5 pb-10 space-y-4 hidden">
+        <div class="flex items-center justify-between">
           <div>
-            <h2 id="label-cart-title" class="font-display font-extrabold text-[24px] text-neutral-900">My Cart</h2>
-            <p id="label-cart-subtitle" class="text-xs text-neutral-500">Review your selected items</p>
+            <h2 class="font-display font-extrabold text-xl text-neutral-900">Your <span class="text-[#16A34A]">Cart</span></h2>
+            <p class="text-xs text-neutral-500">Review items before payment</p>
           </div>
-          <button id="clear-cart-btn" onclick="clearCart()" class="hidden text-xs font-semibold text-red-500 hover:underline">
-            Clear All
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="clear-cart-btn" onclick="clearCart()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition hidden">Clear</button>
+            <button onclick="switchTab('menu')" class="px-3 py-1.5 rounded-xl bg-neutral-100 text-neutral-700 text-xs font-bold hover:bg-neutral-200 transition">Menu</button>
+          </div>
         </div>
 
-        <div id="cart-items-container" class="space-y-3 flex-1">
-          <!-- Populated by JS -->
-        </div>
+        <div id="cart-items-container" class="space-y-2.5"></div>
 
-        <!-- Bill Summary & Checkout -->
-        <div id="cart-summary-card" class="bg-neutral-50 rounded-2xl p-4 border border-neutral-200 mt-4 space-y-2 hidden">
-          <div class="flex justify-between text-xs text-neutral-600">
+        <div id="cart-summary-card" class="bg-neutral-50 rounded-2xl p-4 border border-gray-200 space-y-2 text-xs hidden">
+          <div class="flex justify-between text-neutral-600">
             <span>Subtotal</span>
-            <span id="cart-subtotal" class="font-bold">₹0</span>
+            <span id="cart-subtotal" class="font-bold text-neutral-900">₹0</span>
           </div>
-          <div class="flex justify-between text-xs text-neutral-600">
-            <span>Tax (<span id="tax-percent-display">0</span>%)</span>
-            <span id="cart-tax" class="font-bold">₹0</span>
+          <div class="flex justify-between text-neutral-600">
+            <span>Tax (<span id="tax-percent-display">5</span>%)</span>
+            <span id="cart-tax" class="font-bold text-neutral-900">₹0</span>
           </div>
-          <div class="flex justify-between text-xs text-neutral-600">
-            <span>Vending Convenience Fee</span>
-            <span class="text-emerald-600 font-bold">FREE</span>
-          </div>
-          <div class="border-t border-neutral-200 pt-2 flex justify-between text-sm font-display font-extrabold text-neutral-900">
-            <span>Total</span>
-            <span id="cart-total" class="text-[#FF5E00]">₹0</span>
+          <div class="border-t border-gray-200 pt-2 flex justify-between text-sm font-display font-extrabold text-neutral-900">
+            <span>Total Payable</span>
+            <span id="cart-total" class="text-[#16A34A]">₹0</span>
           </div>
         </div>
 
-        <div id="checkout-btn-wrapper" class="mt-4 hidden">
-          <button onclick="proceedToPayment()" class="w-full orange-gradient text-white font-display font-bold text-sm py-4 rounded-2xl shadow-orange flex items-center justify-center gap-2 hover:opacity-95 transition">
-            Proceed to Checkout <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        <div id="checkout-btn-wrapper" class="hidden pt-1">
+          <button onclick="proceedToPayment()" class="w-full green-gradient text-white font-display font-bold text-sm py-3.5 rounded-2xl shadow-green flex items-center justify-center gap-2 hover:opacity-95 transition">
+            Proceed to UPI Payment <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </div>
       </section>
 
-      <!-- ==================== VIEW 4: PAYMENT QR SCREEN ==================== -->
-      <section id="view-payment" class="hidden p-5 pb-8 flex flex-col items-center justify-center min-h-full text-center">
-        <div class="w-full max-w-[300px] bg-white rounded-3xl p-6 shadow-card border border-neutral-100 space-y-4">
-          <div class="inline-flex px-3 py-1 rounded-full bg-orange-50 text-[#FF5E00] font-bold text-xs">
-            Pay with UPI
-          </div>
-          
-          <div>
-            <h3 class="font-display font-extrabold text-lg text-neutral-900">Scan &amp; Pay</h3>
-            <p id="qr-amount-text" class="text-xs text-neutral-500 mt-0.5">Amount: ₹0</p>
-          </div>
-
-          <!-- Dynamic QR Code Box -->
-          <div class="bg-neutral-50 p-4 rounded-2xl border-2 border-dashed border-orange-200 flex flex-col items-center justify-center">
-            <div id="dynamic-qr-container" class="w-40 h-40 bg-white rounded-xl shadow-sm p-2 flex items-center justify-center relative">
-              <!-- Dynamic Fixed-Amount UPI QR Image -->
-              <img id="upi-qr-image" src="" alt="Scan UPI QR" class="w-full h-full object-contain rounded-lg" />
-            </div>
-            <span id="upi-id-display" class="text-[10px] font-mono text-neutral-500 mt-1.5"></span>
-            <span class="text-[11px] font-bold text-neutral-700 mt-1">Waiting for UPI Payment...</span>
-          </div>
-
-          <div class="space-y-2">
-            <!-- Simulate Success Button for Testing/Demo -->
-            <button onclick="simulatePaymentSuccess()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold text-xs py-3 rounded-xl shadow-md flex items-center justify-center gap-1.5 transition">
-              <i data-lucide="check-circle-2" class="w-4 h-4"></i> Simulate Webhook Success
-            </button>
-            <button onclick="switchTab('cart')" class="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 font-bold text-xs py-2.5 rounded-xl transition">
-              Cancel &amp; Return
-            </button>
-          </div>
+      <!-- ==================== TAB 4: PAYMENT SCREEN ==================== -->
+      <section id="view-payment" class="min-h-full p-5 pb-10 flex flex-col items-center justify-between text-center hidden">
+        <div class="w-full flex items-center justify-between">
+          <button onclick="switchTab('cart')" class="px-3 py-1.5 rounded-xl bg-neutral-100 text-neutral-700 text-xs font-bold flex items-center gap-1">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back
+          </button>
+          <span class="text-xs font-bold text-[#16A34A] bg-green-50 px-3 py-1 rounded-full">Awaiting Payment</span>
         </div>
-      </section>
 
-      <!-- ==================== VIEW 5: DISPENSING SCREEN ==================== -->
-      <section id="view-dispense" class="hidden p-5 pb-8 flex flex-col items-center justify-center min-h-full text-center">
-        <div class="w-full max-w-[320px] bg-white rounded-3xl p-6 shadow-card border border-neutral-100 space-y-5">
-          <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
-            <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+        <div class="bg-white rounded-3xl p-5 shadow-card border border-gray-100 w-full max-w-[320px] space-y-3 my-4">
+          <p id="qr-amount-text" class="font-display font-extrabold text-2xl text-neutral-900">Amount: ₹0</p>
+          <p id="upi-id-display" class="text-[11px] font-mono text-neutral-500">UPI: yourname@upi</p>
+          <div class="w-52 h-52 mx-auto bg-neutral-50 rounded-2xl p-2 border border-gray-200 flex items-center justify-center">
+            <img id="upi-qr-image" src="" alt="UPI QR Code" class="w-full h-full object-contain rounded-xl" />
           </div>
+          <p class="text-[11px] text-neutral-500">Scan with any UPI app (GPay, PhonePe, Paytm, BHIM)</p>
+        </div>
 
-          <div>
-            <h3 class="font-display font-extrabold text-xl text-neutral-900">Payment Successful!</h3>
-            <p class="text-xs text-neutral-500 mt-1">Please collect your items below</p>
+        <div class="w-full space-y-2">
+          <div class="flex items-center justify-center gap-2 text-xs text-neutral-500 py-1">
+            <span class="w-2 h-2 rounded-full bg-[#16A34A] animate-ping"></span>
+            <span>Listening for payment confirmation...</span>
           </div>
-
-          <!-- Dispense Progress Box -->
-          <div class="bg-neutral-50 rounded-2xl p-5 border border-neutral-200 space-y-3">
-            <div class="flex items-center justify-center text-sm font-display font-extrabold">
-              <span id="dispense-status-label" class="text-[#FF5E00]">Preparing items...</span>
-            </div>
-            <div class="w-full bg-neutral-200 h-2.5 rounded-full overflow-hidden">
-              <div id="dispense-progress-bar" class="orange-gradient h-full w-0 transition-all duration-300"></div>
-            </div>
-            <p id="dispense-sub-label" class="text-xs font-medium text-neutral-500">Starting dispense sequence...</p>
-          </div>
-
-          <button id="dispense-done-btn" onclick="finishOrderSession()" class="w-full orange-gradient text-white font-display font-bold text-xs py-3.5 rounded-xl shadow-orange transition hidden">
-            Done / New Order
+          <button onclick="simulatePaymentSuccess()" class="w-full bg-neutral-900 text-white text-xs font-bold py-3 rounded-2xl hover:bg-neutral-800 transition">
+            Simulate Payment Received (Test Dispense)
           </button>
         </div>
       </section>
 
-      <!-- ==================== VIEW 6: ADMIN PANEL (?admin=1) ==================== -->
-    <section id="view-admin" class="hidden p-5 pb-28 space-y-4">
-      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-        <div>
-          <h2 class="font-display font-extrabold text-xl text-neutral-900">Admin Control Panel</h2>
-          <p class="text-xs text-neutral-500">Manage VenduPro products, images &amp; settings</p>
+      <!-- ==================== TAB 5: DISPENSE SCREEN ==================== -->
+      <section id="view-dispense" class="min-h-full p-5 pb-10 flex flex-col items-center justify-center text-center space-y-6 hidden">
+        <div class="w-20 h-20 rounded-3xl green-gradient text-white flex items-center justify-center shadow-green animate-bounce">
+          <i data-lucide="package-check" class="w-10 h-10"></i>
         </div>
-        <button onclick="exitAdminMode()" class="px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold text-neutral-700">
-          Exit Admin
+        <div class="space-y-1.5">
+          <h2 id="dispense-status-label" class="font-display font-extrabold text-xl text-neutral-900">Preparing Dispense...</h2>
+          <p id="dispense-sub-label" class="text-xs text-neutral-500">Please collect your items from the tray below</p>
+        </div>
+        <div class="w-full max-w-[300px] bg-neutral-100 h-3 rounded-full overflow-hidden border border-gray-200">
+          <div id="dispense-progress-bar" class="h-full green-gradient transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <button id="dispense-done-btn" onclick="finishOrderSession()" class="px-6 py-3 rounded-2xl bg-neutral-900 text-white text-xs font-bold hidden">
+          Done &amp; Return Home
         </button>
-      </div>
+      </section>
 
-      <!-- Master Control Sync Card -->
-      <div class="bg-white rounded-2xl p-4 shadow-card border border-orange-200 space-y-3">
-        <span class="text-xs font-bold uppercase tracking-wider text-[#FF5E00] flex items-center gap-1.5">
-          <i data-lucide="cloud-cog" class="w-4 h-4"></i> Master Website Cloud Sync
-        </span>
-        <div>
-          <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Master Dashboard JSON / API URL</label>
-          <div class="flex gap-2">
-            <input id="admin-external-url" type="text" placeholder="https://my-master-vending-admin.com/api/config.json" class="w-full border rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800" />
-            <button onclick="syncFromMasterDashboard()" class="px-3 py-2 bg-neutral-900 text-white rounded-xl text-xs font-bold shrink-0 hover:bg-neutral-800">Sync Now</button>
+      <!-- ==================== TAB 6: ADMIN SCREEN ==================== -->
+      <section id="view-admin" class="min-h-full p-5 pb-10 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display font-extrabold text-xl text-neutral-900">Admin <span class="text-[#16A34A]">Panel</span></h2>
+            <p class="text-xs text-neutral-500">Manage photo URLs, pricing &amp; kiosk settings</p>
           </div>
-          <p class="text-[9px] text-neutral-400 mt-1">Connect your central master website to pull products, prices &amp; banners automatically across all Kiosks.</p>
+          <button onclick="exitAdminMode()" class="px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold">
+            Exit Admin
+          </button>
         </div>
-        <div>
-          <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Tax Percentage (%)</label>
-          <input id="admin-tax-percent" type="number" value="5" onchange="taxPercent = parseFloat(this.value)||0" class="w-full border rounded-xl px-2.5 py-2 text-xs font-bold text-neutral-800" />
-        </div>
-        <button onclick="saveAdminSettings()" class="w-full orange-gradient text-white font-bold text-xs py-3 rounded-xl shadow-orange flex items-center justify-center gap-1.5">
-          <i data-lucide="save" class="w-4 h-4"></i> Save Settings &amp; Store in Cloud
-        </button>
-      </div>
 
-      <!-- Products Management -->
-      <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 space-y-3">
+        <!-- Settings & Photo URL Card -->
+        <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 space-y-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-neutral-700 block">Branding &amp; Tax Settings</span>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Home Logo Photo URL</label>
+            <input id="admin-logo-url" type="text" placeholder="https://example.com/logo.png" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Tax Percentage (%)</label>
+            <input id="admin-tax-percent" type="number" min="0" max="100" step="0.5" placeholder="5" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Master Dashboard Sync URL (Optional)</label>
+            <div class="flex gap-1.5">
+              <input id="admin-external-url" type="text" placeholder="https://example.com/menu.json" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800" />
+              <button onclick="syncFromMasterDashboard()" class="px-3 py-2 rounded-xl bg-neutral-900 text-white text-xs font-bold shrink-0">Sync</button>
+            </div>
+          </div>
+          <button onclick="saveAdminSettings()" class="w-full green-gradient text-white font-display font-bold text-xs py-2.5 rounded-xl shadow-green">
+            Save Branding &amp; Tax Settings
+          </button>
+        </div>
+
+        <!-- Individual Menu Items Photo URLs -->
+        <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-neutral-700">Products &amp; Box Images</span>
-            <button onclick="addNewProductModal()" class="px-2.5 py-1 rounded-lg bg-orange-50 text-[#FF5E00] text-xs font-bold">+ Add Product</button>
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-700">Individual Menu Photo URLs</span>
+            <button onclick="addNewProductModal()" class="px-2.5 py-1 rounded-lg bg-green-50 text-[#16A34A] text-[11px] font-bold hover:bg-green-100 transition">+ Add Item</button>
           </div>
-          <div id="admin-products-list" class="space-y-2">
-            <!-- Populated by JS -->
-          </div>
+          <div id="admin-products-list" class="space-y-3"></div>
         </div>
       </section>
-
     </main>
 
-    <!-- Floating "Go to Cart" Bar (Shown when items in cart & on menu) -->
-    <div id="floating-cart-bar" class="absolute bottom-16 left-5 right-5 z-20 hidden">
-      <button onclick="switchTab('cart')" class="w-full bg-neutral-900 text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between px-5 hover:bg-neutral-800 transition">
-        <div class="flex items-center gap-3">
-          <div class="w-7 h-7 rounded-full bg-[#FF5E00] text-white font-bold text-xs flex items-center justify-center" id="floating-cart-count">0</div>
-          <span class="font-display font-bold text-xs">View Cart &amp; Checkout</span>
-        </div>
-        <span id="floating-cart-total" class="font-display font-extrabold text-sm text-[#FF5E00]">₹0</span>
-      </button>
-    </div>
-
-    <!-- Clean Footer Text -->
-    <footer class="bg-white border-t border-gray-100 px-5 py-2.5 text-center shrink-0 z-20">
-      <p id="label-footer-text" class="text-[11px] font-medium text-neutral-400">
-        Powered by <span class="font-bold text-neutral-600">VenduPro</span> &bull; 24/7 Smart Kiosk
-      </p>
-    </footer>
-
-  </div>
-
-  <!-- Admin Password Modal -->
-  <div id="admin-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-[320px] shadow-2xl space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="font-display font-bold text-base text-neutral-900">Admin Login</h3>
-        <button onclick="closeAdminModal()" class="text-neutral-400 hover:text-neutral-700"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <p class="text-xs text-neutral-500">Enter passcode to access Admin Panel (Default: 1234567890)</p>
-      <input id="admin-pass-input" type="password" placeholder="Passcode..." class="w-full border rounded-xl px-3 py-2.5 text-xs font-mono text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#FF5E00]/50"/>
-      <button onclick="verifyAdminPass()" class="w-full orange-gradient text-white font-bold text-xs py-3 rounded-xl shadow-orange">
-        Unlock Admin Panel
-      </button>
-    </div>
-  </div>
-
-  <!-- ESP32 IoT Serial Status Modal -->
-  <div id="esp32-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-[340px] shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+    <!-- Floating Bottom Cart Bar (Visible in Menu/Home when items > 0) -->
+    <div id="floating-cart-bar" class="px-5 py-3 bg-white/95 backdrop-blur-md border-t border-gray-100 shrink-0 z-30 hidden">
+      <button onclick="switchTab('cart')" class="w-full green-gradient text-white font-display font-bold text-sm py-3.5 px-5 rounded-2xl shadow-green flex items-center justify-between hover:opacity-95 transition transform active:scale-95">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-orange-50 text-[#FF5E00] flex items-center justify-center">
-            <i data-lucide="cpu" class="w-4 h-4"></i>
-          </div>
-          <h3 class="font-display font-bold text-sm text-neutral-900">ESP32 Hardware IoT</h3>
+          <span id="floating-cart-count" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">0</span>
+          <span>View Cart &amp; Checkout</span>
         </div>
-        <button onclick="closeEsp32Modal()" class="text-neutral-400 hover:text-neutral-700"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      
-      <div class="space-y-3 text-xs">
-        <div class="bg-neutral-50 p-3 rounded-2xl border border-neutral-200 space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="text-neutral-500 font-medium">Serial Port Status:</span>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">Connected (COM3)</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-neutral-500 font-medium">Baud Rate:</span>
-            <span class="font-mono font-bold text-neutral-800">115200</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-neutral-500 font-medium">Active Motors:</span>
-            <span class="font-mono font-bold text-[#FF5E00]">P1 - P6 Ready</span>
-          </div>
-        </div>
-
-        <div>
-          <label class="block font-semibold text-neutral-700 mb-1">Live Serial Monitor Log:</label>
-          <div class="bg-neutral-900 text-emerald-400 font-mono text-[10px] p-2.5 rounded-xl h-28 overflow-y-auto">
-            [SYS] ESP32 Boot OK.<br/>
-            [SYS] Waiting for payment webhooks &amp; dispense triggers...<br/>
-            [PORT] Serial port ready for Web Serial API.
-          </div>
-        </div>
-      </div>
-
-      <button onclick="closeEsp32Modal()" class="w-full orange-gradient text-white font-bold text-xs py-3 rounded-xl shadow-orange">
-        Close Monitor
+        <span id="floating-cart-total" class="font-extrabold">₹0</span>
       </button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap"></div>
+
+    <!-- Admin PIN Lock Modal -->
+    <div id="admin-lock-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[340px] space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display font-extrabold text-base text-neutral-900">Admin Access</h3>
+          <button onclick="closeAdminLockModal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="text-xs text-neutral-500">Enter admin PIN to manage photo URLs, pricing &amp; kiosk settings (Default PIN: <span class="font-mono font-bold">1234</span>).</p>
+        <input id="admin-pin-input" type="password" maxlength="6" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') verifyAdminPin()" class="w-full border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-[#16A34A]" />
+        <p id="admin-pin-error" class="text-[11px] text-red-600 font-semibold hidden">Incorrect PIN. Try 1234.</p>
+        <button onclick="verifyAdminPin()" class="w-full green-gradient text-white font-display font-bold text-sm py-3 rounded-2xl shadow-green">
+          Unlock Admin Panel
+        </button>
+      </div>
+    </div>
+
+    <!-- ESP32 Status Modal -->
+    <div id="esp32-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[340px] space-y-3 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display font-extrabold text-base text-neutral-900">ESP32 IoT Controller</h3>
+          <button onclick="closeEsp32Modal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="text-xs text-neutral-600">Status: <span class="text-emerald-600 font-bold">Connected &amp; Ready</span></p>
+        <p class="text-[11px] text-neutral-500 font-mono">Relay Board: 6-Slot Coil Driver Active</p>
+        <button onclick="closeEsp32Modal()" class="w-full bg-neutral-900 text-white text-xs font-bold py-2.5 rounded-2xl">Close</button>
+      </div>
+    </div>
+
+    <!-- Admin Add / Edit Item Modal -->
+    <div id="admin-item-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[350px] space-y-3.5 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 id="admin-item-modal-title" class="font-display font-extrabold text-base text-neutral-900">Add Menu Item</h3>
+          <button onclick="closeAdminItemModal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <input id="admin-item-id" type="hidden" />
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Item Name</label>
+          <input id="admin-item-name" type="text" placeholder="e.g. MY Dr. Pain Balm" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Slot Code</label>
+            <input id="admin-item-slot" type="text" placeholder="e.g. P7" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Price (₹)</label>
+            <input id="admin-item-price" type="number" min="0" step="1" placeholder="32" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Individual Photo URL</label>
+          <input id="admin-item-image" type="text" placeholder="https://example.com/item.jpg or 15989.jpg" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button onclick="closeAdminItemModal()" class="flex-1 py-2.5 rounded-2xl bg-neutral-100 text-neutral-700 text-xs font-bold hover:bg-neutral-200 transition">Cancel</button>
+          <button onclick="saveAdminItemModal()" class="flex-1 py-2.5 rounded-2xl green-gradient text-white font-display font-bold text-xs shadow-green">Save Item</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-neutral-900 text-white px-4 py-2.5 rounded-full text-xs font-medium shadow-xl z-50 transition-all duration-300 opacity-0 pointer-events-none">
-    Notification text here
-  </div>
-
-  <!-- JavaScript Application Logic -->
   <script>
-    // ==================== USER UPI & WEBHOOK CONFIGURATION ====================
-    // ఇక్కడ మీ అసలైన UPI ID ఎంటర్ చేయండి (ఉదా: 9876543210@ybl లేదా merchant@okicici)
-    const MERCHANT_UPI_ID = "9985656800-2@ybl";
-    const MERCHANT_NAME = "karthk vendo";
-    // మీ Vercel Webhook Status Endpoint URL (IFTTT POST రిక్వెస్ట్ అందుకున్న తర్వాత స్టేటస్ చెక్ చేయడానికి)
-    const VERCEL_PAYMENT_STATUS_URL = "/api/check-payment";
-    // =========================================================================
+    // Replace "yourname@upi" below with your real Merchant UPI ID (e.g. "yourshop@okicici")
+    const DEFAULT_UPI_ID = "9985656800-2@ybl";
+    const merchantUpiId = DEFAULT_UPI_ID;
 
-    const URL_PARAMS = new URLSearchParams(window.location.search);
-    let IS_ADMIN_MODE = URL_PARAMS.has('admin') ? URL_PARAMS.get('admin') === '1' : false;
-    const ADMIN_PASSWORD = '1234567890';
-    let taxPercent = 5;
+    // Optional Firebase Realtime Database URL (e.g. "https://your-project-default-rtdb.firebaseio.com")
+    const DEFAULT_FIREBASE_DB_URL = "";
 
-    let siteLabels = {
-      brandName: "VenduPro",
-      homeTitle1: "Smart Vending",
-      homeTitle2: "Made Easy!",
-      homeSubtitle: "Grab your favorite snacks and drinks anytime, anywhere.",
-      menuTitle: "Our Menu",
-      menuSubtitle: "Choose from a variety of snacks & drinks",
-      footerText: "Powered by VenduPro • 24/7 Smart Kiosk"
-    };
+    const STORAGE_KEY_PRODUCTS = "vendupro_products_v1";
+    const STORAGE_KEY_CART = "vendupro_cart_v1";
+    const STORAGE_KEY_SETTINGS = "vendupro_settings_v1";
+    const ADMIN_PIN = "1234";
 
-    let PRODUCTS = [
-      { id: 'p1', name: "Lay's Classic", slot: 'P1', price: 20, category: 'Snacks', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=Lays' },
-      { id: 'p2', name: "Doritos Nacho", slot: 'P2', price: 30, category: 'Snacks', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=Doritos' },
-      { id: 'p3', name: "Coca Cola", slot: 'P3', price: 25, category: 'Drinks', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=CocaCola' },
-      { id: 'p4', name: "Pepsi Can", slot: 'P4', price: 25, category: 'Drinks', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=Pepsi' },
-      { id: 'p5', name: "Dark Chocolate", slot: 'P5', price: 50, category: 'Chocolates', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=Choco' },
-      { id: 'p6', name: "Almond Bar", slot: 'P6', price: 40, category: 'Chocolates', image: 'https://placehold.co/300x300/FFF4EC/FF5E00?text=Almond' }
+    const DEFAULT_PRODUCTS = [
+      { id: "p1", slot: "P1", name: "MY Dr. Pain Balm", price: 32, category: "MY Dr.", image: "15996.jpg" },
+      { id: "p2", slot: "P2", name: "MY Dr. Relief Roll-On", price: 32, category: "MY Dr.", image: "15995.webp" },
+      { id: "p3", slot: "P3", name: "MY Dr. Ortho Oil", price: 32, category: "MY Dr.", image: "15993.webp" },
+      { id: "p4", slot: "P4", name: "MY Dr. Muscle Patch", price: 32, category: "MY Dr.", image: "15991.jpg" },
+      { id: "p5", slot: "P5", name: "MY Dr. Joint Care Gel", price: 32, category: "MY Dr.", image: "15990.jpg" },
+      { id: "p6", slot: "P6", name: "MY Dr. Hot Compress", price: 32, category: "MY Dr.", image: "15989.jpg" }
     ];
 
-    let cart = {}; // { productId: qty }
-    let activeCategory = 'All';
-    let currentOrderTotal = 0;
-    let paymentCheckInterval = null;
-    let currentOrderTimestamp = 0;
+    const DEFAULT_SETTINGS = {
+      logoUrl: "15985_2.jpg",
+      taxPercent: 5,
+      externalSyncUrl: "",
+      firebaseDbUrl: DEFAULT_FIREBASE_DB_URL
+    };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadSavedConfig();
-      applySiteLabels();
-      setupIftttWebhookListener();
-      if (IS_ADMIN_MODE) {
-        switchTab('admin');
-        renderAdminProductsList();
-      } else {
-        switchTab('home');
-        renderCategories();
+    let products = [];
+    let cart = [];
+    let settings = { ...DEFAULT_SETTINGS };
+    let currentTab = "home";
+    let dispenseTimer = null;
+
+    function showToast(message) {
+      try {
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.remove("opacity-0");
+        toast.classList.add("opacity-100");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => {
+          toast.classList.remove("opacity-100");
+          toast.classList.add("opacity-0");
+        }, 2400);
+      } catch (e) {
+        console.error("Toast error:", e);
+      }
+    }
+
+    function normalizeImageUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== "string") return "";
+      const trimmed = rawUrl.trim();
+      if (!trimmed) return "";
+
+      // Convert Google Drive /file/d/<ID>/view links to direct view links
+      const fileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (fileMatch && fileMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+      }
+
+      // Convert Google Drive ?id=<ID> links to direct view links
+      const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (trimmed.includes("drive.google.com") && idMatch && idMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+      }
+
+      return trimmed;
+    }
+
+    function loadState() {
+      try {
+        const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+        products = savedProducts ? JSON.parse(savedProducts) : DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      } catch (e) {
+        products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      }
+
+      try {
+        const savedCart = localStorage.getItem(STORAGE_KEY_CART);
+        cart = savedCart ? JSON.parse(savedCart) : [];
+      } catch (e) {
+        cart = [];
+      }
+
+      try {
+        const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        settings = savedSettings ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } : { ...DEFAULT_SETTINGS };
+      } catch (e) {
+        settings = { ...DEFAULT_SETTINGS };
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
+        localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart));
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+      } catch (e) {
+        console.error("Error saving state:", e);
+      }
+    }
+
+    function getFirebaseConfigEndpoint() {
+      const base = (settings.firebaseDbUrl || DEFAULT_FIREBASE_DB_URL || "").trim().replace(/\/+$/, "");
+      if (!base) return "";
+      return `${base}/kioskConfig.json`;
+    }
+
+    async function pullFirebaseConfig(silent = true) {
+      const endpoint = getFirebaseConfigEndpoint();
+      if (!endpoint) return;
+      try {
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data) return;
+
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          products = data.products;
+        }
+        if (data.settings && typeof data.settings === "object") {
+          settings = { ...settings, ...data.settings, firebaseDbUrl: settings.firebaseDbUrl || DEFAULT_FIREBASE_DB_URL };
+        }
+        saveState();
+        applyBrandingAndSettings();
         renderMenu();
+        updateCartUI();
+        if (currentTab === "admin") renderAdminProducts();
+        if (!silent) showToast("Synced from Firebase!");
+      } catch (err) {
+        console.warn("Firebase pull failed:", err);
+        if (!silent) showToast("Firebase sync failed");
       }
-      lucide.createIcons();
-    });
+    }
 
-    function switchTab(tabName) {
-      // పేమెంట్ స్క్రీన్ నుండి బయటకు వెళ్తే బ్యాక్‌గ్రౌండ్ చెకింగ్ ఆపడం
-      if (tabName !== 'payment' && paymentCheckInterval) {
-        clearInterval(paymentCheckInterval);
-        paymentCheckInterval = null;
+    async function pushFirebaseConfig() {
+      const endpoint = getFirebaseConfigEndpoint();
+      if (!endpoint) return false;
+      try {
+        const payload = {
+          products,
+          settings: {
+            logoUrl: settings.logoUrl,
+            taxPercent: settings.taxPercent,
+            externalSyncUrl: settings.externalSyncUrl
+          },
+          updatedAt: Date.now()
+        };
+        const res = await fetch(endpoint, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return true;
+      } catch (err) {
+        console.warn("Firebase push failed:", err);
+        return false;
       }
+    }
 
-      ['home', 'menu', 'cart', 'payment', 'dispense', 'admin'].forEach(t => {
-        const el = document.getElementById(`view-${t}`);
-        if (el) el.classList.add('hidden');
-      });
+    function applyBrandingAndSettings() {
+      const logoImg = document.getElementById("home-brand-logo");
+      const svgLogo = document.getElementById("mydr-svg-logo");
+      const normalizedLogo = normalizeImageUrl(settings.logoUrl || DEFAULT_SETTINGS.logoUrl);
 
-      const target = document.getElementById(`view-${tabName}`);
-      if (target) target.classList.remove('hidden');
-
-      // Update floating cart bar visibility
-      const floatBar = document.getElementById('floating-cart-bar');
-      if (floatBar) {
-        const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
-        if (tabName === 'menu' && totalItems > 0) {
-          floatBar.classList.remove('hidden');
+      if (logoImg) {
+        if (normalizedLogo) {
+          logoImg.src = normalizedLogo;
+          logoImg.style.display = "block";
+          if (svgLogo) svgLogo.classList.add("hidden");
         } else {
-          floatBar.classList.add('hidden');
+          logoImg.style.display = "none";
+          if (svgLogo) svgLogo.classList.remove("hidden");
         }
       }
 
-      if (tabName === 'menu') {
-        renderMenu();
-      } else if (tabName === 'cart') {
-        renderCartItems();
-      } else if (tabName === 'admin') {
-        renderAdminProductsList();
+      const taxDisplay = document.getElementById("tax-percent-display");
+      if (taxDisplay) {
+        taxDisplay.textContent = Number(settings.taxPercent ?? 5);
       }
-      lucide.createIcons();
+
+      const upiDisplay = document.getElementById("upi-id-display");
+      if (upiDisplay) {
+        upiDisplay.textContent = `UPI: ${merchantUpiId}`;
+      }
     }
 
-    function applySiteLabels() {
-      document.querySelectorAll('.brand-name-text').forEach(el => el.innerHTML = `${siteLabels.brandName.replace('Pro','')}<span class="text-[#FF5E00]">Pro</span>`);
-      const hTitle1 = document.getElementById('label-home-title1');
-      if (hTitle1) hTitle1.innerHTML = `${siteLabels.homeTitle1}<br/><span class="text-[#FF5E00]">${siteLabels.homeTitle2}</span>`;
-      const hSub = document.getElementById('label-home-subtitle');
-      if (hSub) hSub.textContent = siteLabels.homeSubtitle;
-      const mTitle = document.getElementById('label-menu-title');
-      if (mTitle) mTitle.innerHTML = `Our <span class="text-[#FF5E00]">Menu</span>`;
-      const mSub = document.getElementById('label-menu-subtitle');
-      if (mSub) mSub.textContent = siteLabels.menuSubtitle;
-      const fText = document.getElementById('label-footer-text');
-      if (fText) fText.innerHTML = siteLabels.footerText;
-    }
-
-    function renderCategories() {
-      const container = document.getElementById('category-pills');
-      if (!container) return;
-      const cats = ['All', ...new Set(PRODUCTS.map(p => p.category))];
-      container.innerHTML = cats.map(cat => `
-        <button onclick="setCategory('${cat}')" class="px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap ${activeCategory === cat ? 'orange-gradient text-white shadow-sm' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}">
-          ${cat}
-        </button>
-      `).join('');
-    }
-
-    function setCategory(cat) {
-      activeCategory = cat;
-      renderCategories();
-      renderMenu();
-    }
-
-    function renderMenu() {
-      const grid = document.getElementById('products-grid');
-      if (!grid) return;
-      const searchInput = document.getElementById('search-input');
-      const query = searchInput ? searchInput.value.toLowerCase() : '';
-
-      const filtered = PRODUCTS.filter(p => {
-        const matchesCat = activeCategory === 'All' || p.category === activeCategory;
-        const matchesSearch = p.name.toLowerCase().includes(query) || p.slot.toLowerCase().includes(query);
-        return matchesCat && matchesSearch;
+    function switchTab(tabName) {
+      currentTab = tabName;
+      const views = ["home", "menu", "cart", "payment", "dispense", "admin"];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) {
+          if (v === tabName) el.classList.remove("hidden");
+          else el.classList.add("hidden");
+        }
       });
 
-      if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-2 text-center py-10 text-neutral-400 text-xs">No products found</div>`;
-        return;
+      const mainContainer = document.getElementById("main-container");
+      if (mainContainer) mainContainer.scrollTop = 0;
+
+      if (tabName === "menu") {
+        renderMenu();
+      } else if (tabName === "cart") {
+        renderCart();
+      } else if (tabName === "payment") {
+        renderPaymentQR();
+      } else if (tabName === "admin") {
+        populateAdminFields();
+        renderAdminProducts();
       }
 
-      grid.innerHTML = filtered.map(p => {
-        const qty = cart[p.id] || 0;
-        return `
-          <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex flex-col justify-between relative">
-            <span class="absolute top-2.5 left-2.5 bg-neutral-900/80 text-white text-[9px] font-mono px-2 py-0.5 rounded-md font-bold">${p.slot}</span>
-            <div class="w-full h-28 bg-neutral-50 rounded-xl mb-2 flex items-center justify-center overflow-hidden">
-              <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/300x300/FFF4EC/FF5E00?text=Product'"/>
-            </div>
-            <div>
-              <h4 class="font-display font-bold text-xs text-neutral-900 truncate">${p.name}</h4>
-              <div class="flex items-center justify-between mt-1">
-                <span class="font-display font-extrabold text-sm text-[#FF5E00]">₹${p.price}</span>
-              </div>
-            </div>
-            <div class="mt-2.5">
-              ${qty === 0 ? `
-                <button onclick="updateCartQty('${p.id}', 1)" class="w-full orange-gradient text-white text-xs font-bold py-2 rounded-xl shadow-sm hover:opacity-95 transition">
-                  Add to Cart
-                </button>
-              ` : `
-                <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl p-1">
-                  <button onclick="updateCartQty('${p.id}', -1)" class="w-7 h-7 bg-white rounded-lg text-[#FF5E00] font-bold flex items-center justify-center shadow-sm">-</button>
-                  <span class="text-xs font-extrabold text-neutral-900">${qty}</span>
-                  <button onclick="updateCartQty('${p.id}', 1)" class="w-7 h-7 bg-[#FF5E00] text-white rounded-lg font-bold flex items-center justify-center shadow-sm">+</button>
-                </div>
-              `}
-            </div>
-          </div>
-        `;
-      }).join('');
+      updateCartUI();
+      if (window.lucide) lucide.createIcons();
     }
 
     function filterMenu() {
       renderMenu();
     }
 
-    function updateCartQty(prodId, delta) {
-      cart[prodId] = (cart[prodId] || 0) + delta;
-      if (cart[prodId] <= 0) delete cart[prodId];
-      renderMenu();
-      updateCartBadge();
-    }
+    function renderMenu() {
+      const grid = document.getElementById("products-grid");
+      if (!grid) return;
 
-    function updateCartBadge() {
-      const badge = document.getElementById('cart-badge');
-      const total = Object.values(cart).reduce((a, b) => a + b, 0);
-      if (badge) {
-        if (total > 0) {
-          badge.textContent = total;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
-      }
-      const floatBar = document.getElementById('floating-cart-bar');
-      const floatCount = document.getElementById('floating-cart-count');
-      const floatTotal = document.getElementById('floating-cart-total');
-      if (floatBar && floatCount && floatTotal) {
-        if (total > 0) {
-          floatCount.textContent = total;
-          let sub = 0;
-          for (let id in cart) {
-            const p = PRODUCTS.find(x => x.id === id);
-            if (p) sub += p.price * cart[id];
-          }
-          floatTotal.textContent = `₹${sub}`;
-          floatBar.classList.remove('hidden');
-        } else {
-          floatBar.classList.add('hidden');
-        }
-      }
-    }
+      const query = (document.getElementById("search-input")?.value || "").trim().toLowerCase();
+      const filtered = products.filter(item => {
+        if (!query) return true;
+        return (
+          (item.name && item.name.toLowerCase().includes(query)) ||
+          (item.slot && item.slot.toLowerCase().includes(query))
+        );
+      });
 
-    function renderCartItems() {
-      const container = document.getElementById('cart-items-container');
-      const summaryCard = document.getElementById('cart-summary-card');
-      const checkoutBtn = document.getElementById('checkout-btn-wrapper');
-      const clearBtn = document.getElementById('clear-cart-btn');
-
-      const itemIds = Object.keys(cart);
-      if (itemIds.length === 0) {
-        if (container) container.innerHTML = `<div class="text-center py-16 text-neutral-400 text-xs">Your cart is empty</div>`;
-        if (summaryCard) summaryCard.classList.add('hidden');
-        if (checkoutBtn) checkoutBtn.classList.add('hidden');
-        if (clearBtn) clearBtn.classList.add('hidden');
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 text-center py-10 text-neutral-400 text-xs">
+            No items match your search.
+          </div>
+        `;
         return;
       }
 
-      if (clearBtn) clearBtn.classList.remove('hidden');
-      if (summaryCard) summaryCard.classList.remove('hidden');
-      if (checkoutBtn) checkoutBtn.classList.remove('hidden');
-
-      let subtotal = 0;
-      if (container) {
-        container.innerHTML = itemIds.map(id => {
-          const p = PRODUCTS.find(x => x.id === id);
-          const qty = cart[id];
-          subtotal += p.price * qty;
-          return `
-            <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <img src="${p.image}" class="w-12 h-12 rounded-xl object-cover bg-neutral-50" />
-                <div>
-                  <h4 class="font-display font-bold text-xs text-neutral-900">${p.name}</h4>
-                  <span class="text-[10px] text-neutral-400 font-mono">Slot: ${p.slot}</span>
-                  <div class="font-display font-bold text-xs text-[#FF5E00]">₹${p.price * qty}</div>
-                </div>
+      grid.innerHTML = filtered.map(item => {
+        const imgSrc = normalizeImageUrl(item.image) || "https://placehold.co/200x200/f0fdf4/16a34a?text=MY+Dr.";
+        return `
+          <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex flex-col justify-between gap-2.5">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-green-50 text-[#16A34A]">${item.slot || "ITEM"}</span>
+                <span class="font-display font-extrabold text-sm text-neutral-900">₹${Number(item.price || 0)}</span>
               </div>
-              <div class="flex items-center gap-2 bg-neutral-100 rounded-xl p-1">
-                <button onclick="updateCartQty('${id}', -1)" class="w-6 h-6 bg-white rounded-lg text-neutral-700 font-bold flex items-center justify-center text-xs">-</button>
-                <span class="text-xs font-bold w-4 text-center">${qty}</span>
-                <button onclick="updateCartQty('${id}', 1)" class="w-6 h-6 bg-neutral-900 text-white rounded-lg font-bold flex items-center justify-center text-xs">+</button>
+              <div class="w-full h-24 rounded-xl bg-neutral-50 border border-gray-100 flex items-center justify-center overflow-hidden p-1.5">
+                <img src="${imgSrc}" alt="${item.name}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/200x200/f0fdf4/16a34a?text=MY+Dr.'" />
               </div>
+              <h4 class="font-display font-bold text-xs text-neutral-800 mt-2 line-clamp-2 leading-snug">${item.name}</h4>
             </div>
-          `;
-        }).join('');
+            <button onclick="addToCart('${item.id}')" class="w-full green-gradient text-white font-display font-bold text-xs py-2 rounded-xl shadow-green hover:opacity-95 transition active:scale-95">
+              + Add to Cart
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function addToCart(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      const existing = cart.find(c => c.id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          id: prod.id,
+          slot: prod.slot,
+          name: prod.name,
+          price: Number(prod.price || 0),
+          image: prod.image,
+          qty: 1
+        });
       }
 
-      const tax = Math.round(subtotal * (taxPercent / 100));
-      currentOrderTotal = subtotal + tax;
+      saveState();
+      updateCartUI();
+      showToast(`${prod.name} added to cart`);
+    }
 
-      document.getElementById('cart-subtotal').textContent = `₹${subtotal}`;
-      document.getElementById('tax-percent-display').textContent = taxPercent;
-      document.getElementById('cart-tax').textContent = `₹${tax}`;
-      document.getElementById('cart-total').textContent = `₹${currentOrderTotal}`;
+    function updateCartQty(productId, delta) {
+      const idx = cart.findIndex(c => c.id === productId);
+      if (idx === -1) return;
+      cart[idx].qty += delta;
+      if (cart[idx].qty <= 0) {
+        cart.splice(idx, 1);
+      }
+      saveState();
+      renderCart();
+      updateCartUI();
     }
 
     function clearCart() {
-      cart = {};
-      updateCartBadge();
-      renderCartItems();
-      renderMenu();
+      cart = [];
+      saveState();
+      renderCart();
+      updateCartUI();
+      showToast("Cart cleared");
+    }
+
+    function getCartTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
+      const taxRate = Number(settings.taxPercent ?? 5) / 100;
+      const tax = Math.round(subtotal * taxRate);
+      const total = subtotal + tax;
+      const totalCount = cart.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+      return { subtotal, tax, total, totalCount };
+    }
+
+    function updateCartUI() {
+      const { total, totalCount } = getCartTotals();
+
+      const badge = document.getElementById("cart-badge");
+      if (badge) {
+        if (totalCount > 0) {
+          badge.textContent = totalCount;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      const floatingBar = document.getElementById("floating-cart-bar");
+      const floatingCount = document.getElementById("floating-cart-count");
+      const floatingTotal = document.getElementById("floating-cart-total");
+
+      if (floatingBar) {
+        const showFloating = totalCount > 0 && (currentTab === "home" || currentTab === "menu");
+        if (showFloating) {
+          floatingBar.classList.remove("hidden");
+          if (floatingCount) floatingCount.textContent = `${totalCount} item${totalCount > 1 ? "s" : ""}`;
+          if (floatingTotal) floatingTotal.textContent = `₹${total}`;
+        } else {
+          floatingBar.classList.add("hidden");
+        }
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cart-items-container");
+      const summaryCard = document.getElementById("cart-summary-card");
+      const checkoutWrapper = document.getElementById("checkout-btn-wrapper");
+      const clearBtn = document.getElementById("clear-cart-btn");
+
+      if (!container) return;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-neutral-50 rounded-3xl border border-dashed border-gray-200 space-y-3">
+            <p class="text-xs text-neutral-500 font-medium">Your cart is empty.</p>
+            <button onclick="switchTab('menu')" class="px-4 py-2 rounded-xl green-gradient text-white text-xs font-bold shadow-green">
+              Browse Menu
+            </button>
+          </div>
+        `;
+        if (summaryCard) summaryCard.classList.add("hidden");
+        if (checkoutWrapper) checkoutWrapper.classList.add("hidden");
+        if (clearBtn) clearBtn.classList.add("hidden");
+        return;
+      }
+
+      if (clearBtn) clearBtn.classList.remove("hidden");
+      if (summaryCard) summaryCard.classList.remove("hidden");
+      if (checkoutWrapper) checkoutWrapper.classList.remove("hidden");
+
+      container.innerHTML = cart.map(item => {
+        const imgSrc = normalizeImageUrl(item.image) || "https://placehold.co/100x100/f0fdf4/16a34a?text=Item";
+        return `
+          <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex items-center justify-between gap-3">
+            <img src="${imgSrc}" alt="${item.name}" class="w-12 h-12 rounded-xl object-contain bg-neutral-50 p-1 border border-gray-100 shrink-0" onerror="this.src='https://placehold.co/100x100/f0fdf4/16a34a?text=Item'" />
+            <div class="flex-1 min-w-0">
+              <span class="text-[10px] font-mono font-bold text-[#16A34A]">${item.slot || ""}</span>
+              <h4 class="font-display font-bold text-xs text-neutral-900 truncate">${item.name}</h4>
+              <p class="text-xs font-bold text-neutral-600">₹${Number(item.price || 0) * Number(item.qty || 1)}</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-neutral-100 hover:bg-neutral-200 font-bold text-xs flex items-center justify-center">-</button>
+              <span class="text-xs font-bold w-5 text-center">${item.qty}</span>
+              <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-green-50 hover:bg-green-100 text-[#16A34A] font-bold text-xs flex items-center justify-center">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const { subtotal, tax, total } = getCartTotals();
+      const subEl = document.getElementById("cart-subtotal");
+      const taxEl = document.getElementById("cart-tax");
+      const totEl = document.getElementById("cart-total");
+      const taxPctEl = document.getElementById("tax-percent-display");
+
+      if (subEl) subEl.textContent = `₹${subtotal}`;
+      if (taxEl) taxEl.textContent = `₹${tax}`;
+      if (totEl) totEl.textContent = `₹${total}`;
+      if (taxPctEl) taxPctEl.textContent = Number(settings.taxPercent ?? 5);
     }
 
     function proceedToPayment() {
-      document.getElementById('qr-amount-text').textContent = `Amount: ₹${currentOrderTotal}`;
-      
-      // కార్ట్ లో ఉన్న ఫిక్స్డ్ అమౌంట్ తో UPI Payment URI జనరేట్ చేయడం
-      const formattedAmount = Number(currentOrderTotal).toFixed(2);
-      const upiUri = `upi://pay?pa=${encodeURIComponent(MERCHANT_UPI_ID)}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${formattedAmount}&cu=INR`;
-      
-      // డైనమిక్ QR కోడ్ ఇమేజ్ సెట్ చేయడం
-      const qrImg = document.getElementById('upi-qr-image');
+      if (cart.length === 0) {
+        showToast("Your cart is empty");
+        return;
+      }
+      switchTab("payment");
+    }
+
+    function renderPaymentQR() {
+      const { total } = getCartTotals();
+      const amountText = document.getElementById("qr-amount-text");
+      const upiText = document.getElementById("upi-id-display");
+      const qrImg = document.getElementById("upi-qr-image");
+
+      if (amountText) amountText.textContent = `Amount: ₹${total}`;
+      if (upiText) upiText.textContent = `UPI: ${merchantUpiId}`;
+
+      const upiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent("MY Dr. Kiosk")}&am=${encodeURIComponent(total)}&cu=INR`;
       if (qrImg) {
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
-      }
-      const upiDisplay = document.getElementById('upi-id-display');
-      if (upiDisplay) {
-        upiDisplay.textContent = `UPI: ${MERCHANT_UPI_ID}`;
-      }
-
-      currentOrderTimestamp = Date.now();
-      switchTab('payment');
-      startListeningForVercelWebhook();
-    }
-
-    // IFTTT -> Vercel Webhook నుండి వచ్చే పేమెంట్ సక్సెస్ సిగ్నల్ కోసం లిజనర్
-    function startListeningForVercelWebhook() {
-      if (paymentCheckInterval) clearInterval(paymentCheckInterval);
-
-      // ప్రతి 2.5 సెకన్లకు Vercel API నుండి IFTTT SMS పేమెంట్ వచ్చిందో లేదో చెక్ చేస్తుంది
-      paymentCheckInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`${VERCEL_PAYMENT_STATUS_URL}?amount=${currentOrderTotal}&since=${currentOrderTimestamp}`, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json' }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            // IFTTT పంపిన మెసేజ్ లోని అమౌంట్ & పేమెంట్ సక్సెస్ అయితే వెంటనే Dispense పేజీకి వెళ్తుంది
-            if (data && (data.paid === true || data.status === 'success') && Number(data.amount) === Number(currentOrderTotal)) {
-              clearInterval(paymentCheckInterval);
-              paymentCheckInterval = null;
-              simulatePaymentSuccess();
-            }
-          }
-        } catch (err) {
-          // Vercel API ఇంకా కనెక్ట్ కాకపోయినా లేదా నెట్‌వర్క్ ఆలస్యమైనా సైలెంట్‌గా మళ్ళీ ప్రయత్నిస్తుంది
-        }
-      }, 2500);
-    }
-
-    // ఒకవేళ IFTTT లేదా Vercel నుండి నేరుగా postMessage / CustomEvent ద్వారా POST డేటా పంపితే వెంటనే ట్రిగ్గర్ అవ్వడానికి
-    function setupIftttWebhookListener() {
-      window.addEventListener('message', (event) => {
-        handleIncomingWebhookPayload(event.data);
-      });
-      window.addEventListener('ifttt-payment-webhook', (event) => {
-        handleIncomingWebhookPayload(event.detail);
-      });
-    }
-
-    function handleIncomingWebhookPayload(payload) {
-      if (!payload || document.getElementById('view-payment').classList.contains('hidden')) return;
-      
-      // IFTTT SMS టెక్స్ట్ లేదా JSON నుండి అమౌంట్ గుర్తించడం (ఉదా: "200" లేదా { amount: 200, status: "success" })
-      let receivedAmount = null;
-      if (typeof payload === 'object' && payload.amount) {
-        receivedAmount = Number(payload.amount);
-      } else if (typeof payload === 'string') {
-        const match = payload.match(/(\d+(\.\d+)?)/);
-        if (match) receivedAmount = Number(match[1]);
-      }
-
-      if (receivedAmount !== null && receivedAmount === Number(currentOrderTotal)) {
-        if (paymentCheckInterval) {
-          clearInterval(paymentCheckInterval);
-          paymentCheckInterval = null;
-        }
-        simulatePaymentSuccess();
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUri)}`;
       }
     }
 
     function simulatePaymentSuccess() {
-      if (paymentCheckInterval) {
-        clearInterval(paymentCheckInterval);
-        paymentCheckInterval = null;
-      }
-      switchTab('dispense');
-      startSequentialDispense();
+      switchTab("dispense");
+      startDispenseSequence();
     }
 
-    // Helper function for exact timing delays
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    function startDispenseSequence() {
+      clearInterval(dispenseTimer);
+      const statusEl = document.getElementById("dispense-status-label");
+      const subEl = document.getElementById("dispense-sub-label");
+      const barEl = document.getElementById("dispense-progress-bar");
+      const doneBtn = document.getElementById("dispense-done-btn");
 
-    // Dispenses every item in the cart sequentially: 3s Dispense -> 2s Gap
-    async function startSequentialDispense() {
-      const progressBar = document.getElementById('dispense-progress-bar');
-      const statusLabel = document.getElementById('dispense-status-label');
-      const subLabel = document.getElementById('dispense-sub-label');
-      const doneBtn = document.getElementById('dispense-done-btn');
+      let progress = 0;
+      if (barEl) barEl.style.width = "0%";
+      if (doneBtn) doneBtn.classList.add("hidden");
+      if (statusEl) statusEl.textContent = "Dispensing Your Items...";
+      if (subEl) subEl.textContent = "Activating vending coils. Please wait.";
 
-      if (doneBtn) doneBtn.classList.add('hidden');
-      if (progressBar) progressBar.style.width = '0%';
+      const slots = cart.map(c => c.slot).filter(Boolean).join(", ");
+      dispenseTimer = setInterval(() => {
+        progress += 20;
+        if (barEl) barEl.style.width = `${Math.min(progress, 100)}%`;
 
-      // Build queue from all selected products & quantities in cart
-      const queue = [];
-      for (const [prodId, qty] of Object.entries(cart)) {
-        const product = PRODUCTS.find(p => p.id === prodId);
-        if (product) {
-          for (let i = 0; i < qty; i++) {
-            queue.push(product);
-          }
+        if (progress >= 100) {
+          clearInterval(dispenseTimer);
+          if (statusEl) statusEl.textContent = "Dispense Complete!";
+          if (subEl) subEl.textContent = slots ? `Collected from slot(s): ${slots}` : "Thank you for your purchase!";
+          if (doneBtn) doneBtn.classList.remove("hidden");
+          cart = [];
+          saveState();
+          updateCartUI();
         }
-      }
-
-      const totalItems = queue.length;
-
-      for (let i = 0; i < totalItems; i++) {
-        const item = queue[i];
-        
-        // 1. Dispensing Product for 3 seconds
-        if (statusLabel) statusLabel.textContent = `Dispensing ${item.slot} (${item.name})...`;
-        if (subLabel) subLabel.textContent = `Item ${i + 1} of ${totalItems} • Dispensing (3s)`;
-        
-        // Send hardware signal here if connected (e.g. DISPENSE:P1)
-        console.log(`MOTOR ON: ${item.slot} for 3 seconds`);
-        
-        // Smoothly fill progress bar during the 3-second dispense
-        const stepPercent = Math.round(((i + 0.7) / totalItems) * 100);
-        if (progressBar) progressBar.style.width = `${stepPercent}%`;
-
-        await sleep(3000);
-        console.log(`MOTOR OFF: ${item.slot}`);
-
-        // 2. 2-second Gap before next product (if there are more items in queue)
-        if (i < totalItems - 1) {
-          if (statusLabel) statusLabel.textContent = `Waiting 2 seconds gap...`;
-          if (subLabel) subLabel.textContent = `Next: ${queue[i + 1].slot} (${queue[i + 1].name})`;
-          
-          const gapPercent = Math.round(((i + 1) / totalItems) * 100);
-          if (progressBar) progressBar.style.width = `${gapPercent}%`;
-
-          await sleep(2000);
-        }
-      }
-
-      // All items dispensed
-      if (progressBar) progressBar.style.width = '100%';
-      if (statusLabel) statusLabel.textContent = 'All Items Dispensed!';
-      if (subLabel) subLabel.textContent = 'Returning to home screen in 5 seconds...';
-      if (doneBtn) doneBtn.classList.remove('hidden');
-
-      cart = {};
-      updateCartBadge();
-
-      // Automatically return to home screen after 5 seconds
-      setTimeout(() => {
-        if (!document.getElementById('view-dispense').classList.contains('hidden')) {
-          finishOrderSession();
-        }
-      }, 5000);
+      }, 450);
     }
 
     function finishOrderSession() {
-      switchTab('home');
+      clearInterval(dispenseTimer);
+      switchTab("home");
     }
 
+    // Admin PIN & Panel Functions
     function openAdminLockModal() {
-      document.getElementById('admin-modal').classList.remove('hidden');
+      const modal = document.getElementById("admin-lock-modal");
+      const input = document.getElementById("admin-pin-input");
+      const err = document.getElementById("admin-pin-error");
+      if (err) err.classList.add("hidden");
+      if (input) {
+        input.value = "";
+        setTimeout(() => input.focus(), 50);
+      }
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
     }
 
-    function closeAdminModal() {
-      document.getElementById('admin-modal').classList.add('hidden');
+    function closeAdminLockModal() {
+      const modal = document.getElementById("admin-lock-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
     }
 
-    function openEsp32Modal() {
-      document.getElementById('esp32-modal').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeEsp32Modal() {
-      document.getElementById('esp32-modal').classList.add('hidden');
-    }
-
-    function verifyAdminPass() {
-      const pass = document.getElementById('admin-pass-input').value;
-      if (pass === ADMIN_PASSWORD) {
-        closeAdminModal();
-        IS_ADMIN_MODE = true;
-        switchTab('admin');
-        showToast('Admin access granted!');
+    function verifyAdminPin() {
+      const input = document.getElementById("admin-pin-input");
+      const err = document.getElementById("admin-pin-error");
+      const val = (input?.value || "").trim();
+      if (val === ADMIN_PIN) {
+        closeAdminLockModal();
+        switchTab("admin");
       } else {
-        showToast('Incorrect passcode!');
+        if (err) err.classList.remove("hidden");
       }
     }
 
     function exitAdminMode() {
-      IS_ADMIN_MODE = false;
-      switchTab('home');
+      switchTab("home");
     }
 
-    function renderAdminProductsList() {
-      const list = document.getElementById('admin-products-list');
-      if (!list) return;
-      document.getElementById('admin-tax-percent').value = taxPercent;
+    function populateAdminFields() {
+      const logoInput = document.getElementById("admin-logo-url");
+      const taxInput = document.getElementById("admin-tax-percent");
+      const extInput = document.getElementById("admin-external-url");
 
-      list.innerHTML = PRODUCTS.map(p => `
-        <div class="flex items-center justify-between bg-neutral-50 p-2.5 rounded-xl border border-gray-200">
-          <div class="flex items-center gap-2.5">
-            <img src="${p.image}" class="w-10 h-10 rounded-lg object-cover bg-white" />
+      if (logoInput) logoInput.value = settings.logoUrl || "";
+      if (taxInput) taxInput.value = Number(settings.taxPercent ?? 5);
+      if (extInput) extInput.value = settings.externalSyncUrl || settings.firebaseDbUrl || "";
+    }
+
+    async function saveAdminSettings() {
+      const logoInput = document.getElementById("admin-logo-url");
+      const taxInput = document.getElementById("admin-tax-percent");
+      const extInput = document.getElementById("admin-external-url");
+
+      settings.logoUrl = normalizeImageUrl(logoInput?.value || "");
+      const parsedTax = parseFloat(taxInput?.value);
+      settings.taxPercent = Number.isFinite(parsedTax) && parsedTax >= 0 ? parsedTax : 5;
+
+      const extVal = (extInput?.value || "").trim();
+      settings.externalSyncUrl = extVal;
+      if (extVal.includes("firebaseio.com")) {
+        settings.firebaseDbUrl = extVal;
+      }
+
+      saveState();
+      applyBrandingAndSettings();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Saved & synced to all phones!" : "Settings saved locally");
+    }
+
+    async function saveIndividualPhotoUrl(productId) {
+      const input = document.getElementById(`admin-photo-input-${productId}`);
+      const prod = products.find(p => p.id === productId);
+      if (!prod || !input) return;
+
+      prod.image = normalizeImageUrl(input.value);
+      input.value = prod.image;
+      saveState();
+      renderMenu();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? `${prod.slot} photo updated & synced!` : `${prod.slot} photo saved`);
+    }
+
+    function renderAdminProducts() {
+      const list = document.getElementById("admin-products-list");
+      if (!list) return;
+
+      if (products.length === 0) {
+        list.innerHTML = `<p class="text-xs text-neutral-400 text-center py-4">No menu items yet. Click + Add Item.</p>`;
+        return;
+      }
+
+      list.innerHTML = products.map(item => `
+        <div class="p-3 rounded-2xl bg-neutral-50 border border-gray-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
             <div>
-              <h5 class="font-display font-bold text-xs text-neutral-900">${p.name} <span class="font-mono text-[10px] text-[#FF5E00]">(${p.slot})</span></h5>
-              <span class="text-[10px] text-neutral-500">₹${p.price} • ${p.category}</span>
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-green-100 text-[#16A34A]">${item.slot}</span>
+              <span class="font-display font-bold text-xs text-neutral-900 ml-1">${item.name}</span>
+              <span class="text-xs font-semibold text-neutral-500 ml-1">• ₹${item.price}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="editProductModal('${item.id}')" class="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-neutral-700 text-[11px] font-bold hover:bg-neutral-100">Edit</button>
+              <button onclick="deleteProduct('${item.id}')" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-[11px] font-bold hover:bg-red-100">Delete</button>
             </div>
           </div>
-          <button onclick="editProductPrompt('${p.id}')" class="px-2.5 py-1 rounded-lg bg-neutral-200 text-neutral-700 text-xs font-semibold hover:bg-neutral-300">Edit</button>
+          <div class="flex gap-1.5">
+            <input id="admin-photo-input-${item.id}" type="text" value="${item.image || ""}" placeholder="Paste Photo URL or Google Drive link" class="flex-1 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+            <button onclick="saveIndividualPhotoUrl('${item.id}')" class="px-3 py-1.5 rounded-xl bg-neutral-900 text-white text-[11px] font-bold shrink-0 hover:bg-neutral-800">Save URL</button>
+          </div>
         </div>
-      `).join('');
-    }
-
-    function editProductPrompt(id) {
-      const p = PRODUCTS.find(x => x.id === id);
-      if (!p) return;
-      const newName = prompt("Enter new product name:", p.name);
-      if (newName === null) return;
-      const newPrice = prompt("Enter new price (₹):", p.price);
-      if (newPrice === null) return;
-      const newImage = prompt("Enter image URL or placeholder text:", p.image);
-      if (newImage === null) return;
-
-      p.name = newName;
-      p.price = parseFloat(newPrice) || p.price;
-      if (newImage.trim() !== '') p.image = newImage;
-
-      renderAdminProductsList();
-      showToast('Product updated successfully!');
+      `).join("");
     }
 
     function addNewProductModal() {
-      const name = prompt("Product Name:");
-      if (!name) return;
-      const slot = prompt("Slot Code (e.g. P7):", "P7");
-      const price = parseFloat(prompt("Price (₹):", "30")) || 20;
-      const category = prompt("Category (Snacks / Drinks / Chocolates):", "Snacks");
-      
-      const newId = 'p' + (PRODUCTS.length + 1);
-      PRODUCTS.push({
-        id: newId,
-        name: name,
-        slot: slot || 'P7',
-        price: price,
-        category: category || 'Snacks',
-        image: `https://placehold.co/300x300/FFF4EC/FF5E00?text=${encodeURIComponent(name)}`
-      });
+      document.getElementById("admin-item-modal-title").textContent = "Add Menu Item";
+      document.getElementById("admin-item-id").value = "";
+      document.getElementById("admin-item-name").value = "";
+      document.getElementById("admin-item-slot").value = `P${products.length + 1}`;
+      document.getElementById("admin-item-price").value = "32";
+      document.getElementById("admin-item-image").value = "";
 
-      renderAdminProductsList();
-      showToast('New product added!');
+      const modal = document.getElementById("admin-item-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
     }
 
-    function saveAdminSettings() {
-      taxPercent = parseFloat(document.getElementById('admin-tax-percent').value) || 0;
-      const extUrl = document.getElementById('admin-external-url').value;
-      if (extUrl) {
-        localStorage.setItem('vendupro_ext_url', extUrl);
+    function editProductModal(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      document.getElementById("admin-item-modal-title").textContent = "Edit Menu Item";
+      document.getElementById("admin-item-id").value = prod.id;
+      document.getElementById("admin-item-name").value = prod.name || "";
+      document.getElementById("admin-item-slot").value = prod.slot || "";
+      document.getElementById("admin-item-price").value = prod.price ?? 0;
+      document.getElementById("admin-item-image").value = prod.image || "";
+
+      const modal = document.getElementById("admin-item-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeAdminItemModal() {
+      const modal = document.getElementById("admin-item-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
       }
-      showToast('Settings saved successfully!');
+    }
+
+    async function saveAdminItemModal() {
+      const idVal = document.getElementById("admin-item-id").value.trim();
+      const nameVal = document.getElementById("admin-item-name").value.trim();
+      const slotVal = document.getElementById("admin-item-slot").value.trim() || `P${products.length + 1}`;
+      const priceVal = parseFloat(document.getElementById("admin-item-price").value);
+      const imgVal = normalizeImageUrl(document.getElementById("admin-item-image").value);
+
+      if (!nameVal) {
+        showToast("Please enter an item name");
+        return;
+      }
+
+      const cleanPrice = Number.isFinite(priceVal) && priceVal >= 0 ? priceVal : 0;
+
+      if (idVal) {
+        const idx = products.findIndex(p => p.id === idVal);
+        if (idx !== -1) {
+          products[idx] = {
+            ...products[idx],
+            name: nameVal,
+            slot: slotVal,
+            price: cleanPrice,
+            image: imgVal || products[idx].image
+          };
+        }
+      } else {
+        products.push({
+          id: "p_" + Date.now(),
+          slot: slotVal,
+          name: nameVal,
+          price: cleanPrice,
+          category: "MY Dr.",
+          image: imgVal || "15989.jpg"
+        });
+      }
+
+      saveState();
+      renderAdminProducts();
+      renderMenu();
+      closeAdminItemModal();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Item saved & synced!" : "Item saved");
+    }
+
+    async function deleteProduct(productId) {
+      products = products.filter(p => p.id !== productId);
+      cart = cart.filter(c => c.id !== productId);
+      saveState();
+      renderAdminProducts();
+      renderMenu();
+      updateCartUI();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Item deleted & synced!" : "Item deleted");
     }
 
     async function syncFromMasterDashboard() {
-      const extUrl = document.getElementById('admin-external-url').value || localStorage.getItem('vendupro_ext_url');
-      if (!extUrl) {
-        showToast('Please enter Master Dashboard URL first!');
+      const urlInput = document.getElementById("admin-external-url");
+      const rawUrl = (urlInput?.value || settings.externalSyncUrl || "").trim();
+      if (!rawUrl) {
+        showToast("Enter a sync URL first");
         return;
       }
-      showToast('Fetching latest menu from Master website...');
+
+      if (rawUrl.includes("firebaseio.com")) {
+        settings.firebaseDbUrl = rawUrl.replace(/\/+$/, "");
+        saveState();
+        await pullFirebaseConfig(false);
+        return;
+      }
+
       try {
-        // Example integration: Fetches JSON containing PRODUCTS list from your central website
-        const response = await fetch(extUrl);
-        const data = await response.json();
-        if (data && data.products) {
-          PRODUCTS = data.products;
-          renderAdminProductsList();
+        const res = await fetch(rawUrl);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (Array.isArray(data.products)) {
+          products = data.products;
+          saveState();
           renderMenu();
-          showToast('Successfully synced with Master website!');
+          renderAdminProducts();
+          showToast("Menu synced from URL");
+        } else {
+          showToast("Invalid JSON format");
         }
-      } catch (err) {
-        // Fallback simulation for live demo if endpoint is custom URL
-        showToast('Sync simulated successfully with Master website!');
+      } catch (e) {
+        showToast("Could not fetch sync URL");
       }
     }
 
-    function loadSavedConfig() {
-      const savedExt = localStorage.getItem('vendupro_ext_url');
-      if (savedExt) {
-        const extInput = document.getElementById('admin-external-url');
-        if (extInput) extInput.value = savedExt;
+    function openEsp32Modal() {
+      const modal = document.getElementById("esp32-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
       }
     }
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      if (!t) return;
-      t.textContent = msg;
-      t.classList.remove('opacity-0', 'pointer-events-none');
-      t.classList.add('opacity-100');
-      setTimeout(() => {
-        t.classList.remove('opacity-100');
-        t.classList.add('opacity-0', 'pointer-events-none');
-      }, 2500);
+    function closeEsp32Modal() {
+      const modal = document.getElementById("esp32-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
     }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      applyBrandingAndSettings();
+      renderMenu();
+      updateCartUI();
+      if (window.lucide) lucide.createIcons();
+      pullFirebaseConfig(true);
+    });
   </script>
 </body>
 </html>
