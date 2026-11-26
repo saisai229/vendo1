@@ -1,366 +1,1129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VenduPro Smart Kiosk</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f6fa;color:#222}
-header{background:#111827;color:white;padding:16px;display:flex;justify-content:space-between;align-items:center}
-header h2{margin:0}
-button{border:0;padding:11px 15px;border-radius:8px;background:#2563eb;color:white;cursor:pointer}
-input{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #ccc;border-radius:7px}
-.container{max-width:1000px;margin:auto;padding:16px}
-.section{background:white;padding:16px;border-radius:12px;margin:15px 0}
-.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.product{background:white;border-radius:12px;padding:12px;box-shadow:0 2px 8px #0001}
-.product img{width:100%;height:145px;object-fit:contain}
-.price{font-weight:bold;color:#087443}
-.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.hidden{display:none}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-small{color:#666}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VenduPro Smart Vending Kiosk</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+            'green': '0 10px 20px -5px rgba(22, 163, 74, 0.35)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .green-gradient {
+      background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+    }
+    .hero-bg {
+      background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%);
+    }
+    /* Hide scrollbar for clean horizontal scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-neutral-900 font-sans antialiased text-neutral-800 flex items-center justify-center min-h-screen p-0 sm:p-4 select-none">
 
-<header>
-  <h2 id="brand">VenduPro</h2>
-  <button onclick="showAdmin()">Admin</button>
-</header>
+  <!-- Mobile Kiosk Frame Container -->
+  <div class="w-full sm:max-w-[420px] h-screen sm:h-[860px] bg-white sm:rounded-[40px] shadow-2xl flex flex-col justify-between relative overflow-hidden border border-neutral-800">
 
-<div class="container">
-
-<section id="home" class="section">
-  <h2 id="welcome">Welcome to Smart Kiosk</h2>
-  <p>Select your products and place your order.</p>
-  <button onclick="showMenu()">Explore Products</button>
-</section>
-
-<section id="menu" class="section hidden">
-  <h2>Products</h2>
-  <div id="products" class="products"></div>
-</section>
-
-<section id="cart" class="section hidden">
-  <h2>Your Cart</h2>
-  <div id="cartItems"></div>
-  <h3 id="total">Total: ₹0</h3>
-  <label>Table Number</label>
-  <input id="tableNo" placeholder="Enter table number">
-  <button onclick="placeOrder('UPI')">Pay with UPI</button>
-  <button onclick="placeOrder('Cash')">Pay Cash</button>
-</section>
-
-<section id="adminLogin" class="section hidden">
-  <h2>Admin Login</h2>
-  <input id="adminPin" type="password" placeholder="Admin PIN">
-  <button onclick="loginAdmin()">Login</button>
-</section>
-
-<section id="admin" class="section hidden">
-  <h2>Admin Panel</h2>
-
-  <h3>Brand Settings</h3>
-  <input id="brandInput" placeholder="Brand Name">
-  <button onclick="saveBrand()">Save Brand</button>
-
-  <h3>Admin PIN</h3>
-  <input id="newPin" type="password" placeholder="New PIN">
-  <button onclick="changePin()">Change PIN</button>
-
-  <h3>Add / Edit Product</h3>
-  <input id="productId" type="hidden">
-  <input id="pName" placeholder="Product Name">
-  <input id="pPrice" type="number" placeholder="Price">
-  <input id="pImage" placeholder="Image URL">
-  <input id="pSlot" placeholder="Machine Slot">
-  <button onclick="saveProduct()">Save Product</button>
-
-  <h3>Manage Products</h3>
-  <div id="adminProducts"></div>
-
-  <h3>Customer Orders</h3>
-  <button onclick="loadOrders()">Refresh Orders</button>
-  <div id="orders"></div>
-
-  <button onclick="logoutAdmin()">Logout</button>
-</section>
-
-</div>
-
-<script>
-// 1. SUPABASE CONFIGURATION
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// 2. SETTINGS
-let ADMIN_PIN = localStorage.getItem("vendupro_pin") || "1234";
-let cart = [];
-let productList = [];
-
-// 3. PAGE NAVIGATION
-function hideAll(){
-  ["home","menu","cart","adminLogin","admin"].forEach(id=>{
-    document.getElementById(id).classList.add("hidden");
-  });
-}
-function showMenu(){
-  hideAll();
-  document.getElementById("menu").classList.remove("hidden");
-  document.getElementById("cart").classList.remove("hidden");
-  loadProducts();
-}
-function showAdmin(){
-  hideAll();
-  document.getElementById("adminLogin").classList.remove("hidden");
-}
-
-// 4. LOAD PRODUCTS FROM SUPABASE
-async function loadProducts(){
-  const {data,error}=await db.from("products").select("*").order("id");
-  if(error){
-    alert("Products loading error: "+error.message);
-    return;
-  }
-  productList=data||[];
-  renderProducts();
-  renderAdminProducts();
-}
-
-function renderProducts(){
-  const box=document.getElementById("products");
-  box.innerHTML="";
-  productList.forEach(p=>{
-    box.innerHTML+=`
-      <div class="product">
-        <img src="${escapeAttr(p.image_url||"")}" onerror="this.style.display='none'">
-        <h3>${escapeHtml(p.name)}</h3>
-        <p class="price">₹${Number(p.price)||0}</p>
-        <button onclick="addToCart('${escapeAttr(p.id)}')">Add to Cart</button>
-      </div>`;
-  });
-}
-
-// 5. CART
-function addToCart(id){
-  const p=productList.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  const existing=cart.find(x=>String(x.id)===String(id));
-  if(existing) existing.qty++;
-  else cart.push({...p,qty:1});
-  renderCart();
-}
-function renderCart(){
-  const box=document.getElementById("cartItems");
-  box.innerHTML="";
-  let total=0;
-  cart.forEach((p,i)=>{
-    total+=Number(p.price)*p.qty;
-    box.innerHTML+=`
-      <div class="row">
-        <span>${escapeHtml(p.name)} × ${p.qty}</span>
-        <span>
-          ₹${Number(p.price)*p.qty}
-          <button onclick="changeQty(${i},-1)">−</button>
-          <button onclick="changeQty(${i},1)">+</button>
-        </span>
-      </div>`;
-  });
-  document.getElementById("total").innerText="Total: ₹"+total;
-}
-function changeQty(i,n){
-  cart[i].qty+=n;
-  if(cart[i].qty<=0)cart.splice(i,1);
-  renderCart();
-}
-
-// 6. PLACE ORDER
-async function placeOrder(method){
-  if(!cart.length)return alert("Cart is empty");
-  const table=document.getElementById("tableNo").value.trim();
-  if(!table)return alert("Enter table number");
-
-  const total=cart.reduce((s,p)=>s+Number(p.price)*p.qty,0);
-
-  const order={
-    table_no:table,
-    items:cart.map(p=>({
-      product_id:p.id,
-      name:p.name,
-      price:Number(p.price),
-      quantity:p.qty
-    })),
-    total:total,
-    payment_method:method,
-    status:"Pending"
-  };
-
-  const {data,error}=await db.from("orders").insert(order).select();
-
-  if(error){
-    alert("Order failed: "+error.message);
-    return;
-  }
-
-  if(method==="UPI"){
-    const upiId="YOUR_UPI_ID";
-    const upiUrl=`upi://pay?pa=${encodeURIComponent(upiId)}&pn=VenduPro&am=${total}&cu=INR`;
-    window.location.href=upiUrl;
-  }else{
-    alert("Order placed! Please pay at the counter.");
-  }
-
-  cart=[];
-  renderCart();
-}
-
-// 7. ADMIN LOGIN
-function loginAdmin(){
-  if(document.getElementById("adminPin").value!==ADMIN_PIN){
-    alert("Wrong PIN");
-    return;
-  }
-  hideAll();
-  document.getElementById("admin").classList.remove("hidden");
-  document.getElementById("brandInput").value=
-    localStorage.getItem("vendupro_brand")||"VenduPro";
-  loadProducts();
-  loadOrders();
-}
-function logoutAdmin(){
-  hideAll();
-  document.getElementById("home").classList.remove("hidden");
-}
-function changePin(){
-  const pin=document.getElementById("newPin").value.trim();
-  if(pin.length<4)return alert("PIN must be at least 4 characters");
-  ADMIN_PIN=pin;
-  localStorage.setItem("vendupro_pin",pin);
-  alert("PIN changed");
-}
-
-// 8. BRAND NAME
-function saveBrand(){
-  const name=document.getElementById("brandInput").value.trim();
-  if(!name)return;
-  localStorage.setItem("vendupro_brand",name);
-  document.getElementById("brand").innerText=name;
-  document.getElementById("welcome").innerText="Welcome to "+name;
-  alert("Brand name saved");
-}
-
-// 9. ADD / EDIT PRODUCT
-async function saveProduct(){
-  const id=document.getElementById("productId").value;
-  const name=document.getElementById("pName").value.trim();
-  const price=Number(document.getElementById("pPrice").value);
-  const image_url=document.getElementById("pImage").value.trim();
-  const slot=document.getElementById("pSlot").value.trim();
-
-  if(!name||!Number.isFinite(price)||price<0){
-    alert("Enter valid product name and price");
-    return;
-  }
-
-  const item={name,price,image_url,slot};
-
-  let result;
-  if(id){
-    result=await db.from("products").update(item).eq("id",id);
-  }else{
-    result=await db.from("products").insert(item);
-  }
-
-  if(result.error){
-    alert("Save error: "+result.error.message);
-    return;
-  }
-
-  document.getElementById("productId").value="";
-  document.getElementById("pName").value="";
-  document.getElementById("pPrice").value="";
-  document.getElementById("pImage").value="";
-  document.getElementById("pSlot").value="";
-  await loadProducts();
-  alert("Product saved");
-}
-
-function renderAdminProducts(){
-  const box=document.getElementById("adminProducts");
-  box.innerHTML="";
-  productList.forEach(p=>{
-    box.innerHTML+=`
-      <div class="section">
-        <b>${escapeHtml(p.name)}</b> — ₹${Number(p.price)||0}
-        <div class="actions">
-          <button onclick="editProduct('${escapeAttr(p.id)}')">Edit</button>
-          <button onclick="deleteProduct('${escapeAttr(p.id)}')">Delete</button>
+    <!-- Top Sticky Header -->
+    <header class="bg-white/90 backdrop-blur-md px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0 z-30">
+      <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('home')">
+        <div class="w-9 h-9 green-gradient rounded-xl flex items-center justify-center text-white shadow-green">
+          <i data-lucide="zap" class="w-5 h-5"></i>
         </div>
-      </div>`;
-  });
-}
-function editProduct(id){
-  const p=productList.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  document.getElementById("productId").value=p.id;
-  document.getElementById("pName").value=p.name||"";
-  document.getElementById("pPrice").value=p.price||0;
-  document.getElementById("pImage").value=p.image_url||"";
-  document.getElementById("pSlot").value=p.slot||"";
-}
-async function deleteProduct(id){
-  if(!confirm("Delete this product?"))return;
-  const {error}=await db.from("products").delete().eq("id",id);
-  if(error)return alert(error.message);
-  loadProducts();
-}
+        <div>
+          <h1 class="font-display font-bold text-base text-neutral-900 tracking-tight brand-name-text">Vendu<span class="text-[#16A34A]">Pro</span></h1>
+          <span class="text-[9px] text-neutral-400 font-medium block -mt-1">Smart Kiosk IoT</span>
+        </div>
+      </div>
+      
+      <!-- Right Header Actions: Cart Shortcut in Top Right Corner & Admin -->
+      <div class="flex items-center gap-2">
+        <button onclick="openEsp32Modal()" class="relative p-2 rounded-xl bg-green-50 hover:bg-green-100 text-[#16A34A] transition hidden" title="ESP32 IoT Status">
+          <i data-lucide="cpu" class="w-5 h-5"></i>
+          <span class="absolute -top-1 -right-1 bg-emerald-500 w-2.5 h-2.5 rounded-full border-2 border-white animate-pulse"></span>
+        </button>
+        <button id="header-cart-btn" onclick="switchTab('cart')" class="relative p-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition" title="Cart">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#16A34A] text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm hidden">0</span>
+        </button>
+      </div>
+    </header>
 
-// 10. LOAD ORDERS
-async function loadOrders(){
-  const box=document.getElementById("orders");
-  box.innerHTML="Loading...";
-  const {data,error}=await db.from("orders").select("*").order("created_at",{ascending:false});
-  if(error){
-    box.innerText="Orders error: "+error.message;
-    return;
-  }
-  box.innerHTML="";
-  (data||[]).forEach(o=>{
-    box.innerHTML+=`
-      <div class="section">
-        <b>Order #${escapeHtml(o.id)}</b>
-        <p>Table: ${escapeHtml(o.table_no)}</p>
-        <p>Total: ₹${Number(o.total)||0}</p>
-        <p>Payment: ${escapeHtml(o.payment_method)}</p>
-        <p>Status: ${escapeHtml(o.status)}</p>
-        <button onclick="updateOrder('${escapeAttr(o.id)}')">Mark Completed</button>
-      </div>`;
-  });
-}
-async function updateOrder(id){
-  const {error}=await db.from("orders").update({status:"Completed"}).eq("id",id);
-  if(error)return alert(error.message);
-  loadOrders();
-}
+    <!-- Main Scrollable Screen Area -->
+    <main id="main-container" class="flex-1 overflow-y-auto relative bg-white">
 
-// 11. BASIC TEXT SAFETY
-function escapeHtml(value){
-  return String(value??"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
-function escapeAttr(value){return escapeHtml(value);}
+      <!-- ==================== TAB 1: HOME SCREEN ==================== -->
+      <section id="view-home" class="min-h-full flex flex-col justify-between hero-bg p-5 pb-6">
+        <div class="mt-2">
+          <!-- MY Dr. Logo Card -->
+          <div class="bg-white rounded-3xl p-4 shadow-card border border-green-100 inline-flex items-center justify-center">
+            <img id="home-brand-logo" src="15985_2.jpg" alt="MY Dr. Logo" class="h-16 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('mydr-svg-logo').classList.remove('hidden');" />
+            <svg id="mydr-svg-logo" class="hidden h-14 w-auto" viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+              <text x="10" y="68" font-family="Georgia, serif" font-weight="bold" font-size="64" fill="#236133" letter-spacing="1">MY Dr</text>
+              <circle cx="242" cy="63" r="6.5" fill="#236133"/>
+              <!-- Red Figure -->
+              <circle cx="250" cy="20" r="4.5" fill="#C81E2B"/>
+              <path d="M232 18 Q247 28 251 46 Q253 28 266 18 Q253 24 250 28 Q246 24 232 18 Z" fill="#C81E2B"/>
+              <!-- Green Leaves -->
+              <path d="M251 49 Q264 38 273 45 Q265 56 251 49 Z" fill="#82BC41"/>
+              <path d="M251 49 Q244 43 239 46 Q244 51 251 49 Z" fill="#82BC41"/>
+              <text x="272" y="20" font-family="Arial, sans-serif" font-size="10" fill="#555">®</text>
+            </svg>
+          </div>
 
-// 12. STARTUP
-const savedBrand=localStorage.getItem("vendupro_brand")||"VenduPro";
-document.getElementById("brand").innerText=savedBrand;
-document.getElementById("welcome").innerText="Welcome to "+savedBrand;
-loadProducts();
-</script>
+          <div class="mt-4 flex items-center gap-2.5">
+            <button onclick="switchTab('menu')" class="green-gradient text-white font-display font-bold text-sm px-6 py-3.5 rounded-2xl shadow-green flex items-center gap-2 hover:opacity-95 transition transform active:scale-95">
+              Browse Menu <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            <button onclick="openAdminLockModal()" class="bg-white hover:bg-neutral-50 text-neutral-700 border border-gray-200 font-display font-bold text-xs px-4 py-3.5 rounded-2xl shadow-card flex items-center gap-1.5 transition">
+              <i data-lucide="shield-check" class="w-4 h-4 text-[#16A34A]"></i> Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- My Doctor Pain Items Banner -->
+        <div class="my-6 relative bg-gradient-to-br from-green-100/70 to-emerald-50 rounded-3xl p-5 border border-green-200/60 flex items-center justify-between shadow-card overflow-hidden">
+          <div class="space-y-1.5 max-w-[180px] z-10">
+            <span class="inline-block px-2.5 py-0.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] font-bold text-[10px]">MY Dr.</span>
+            <h3 class="font-display font-extrabold text-base text-neutral-900 leading-snug">My Doctor Pain Items</h3>
+          </div>
+          <!-- Vending Machine Graphic Card -->
+          <div class="w-24 h-32 bg-neutral-900 rounded-2xl p-2 relative shadow-xl flex flex-col justify-between border-2 border-neutral-800 shrink-0">
+            <div class="flex justify-between items-center px-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-[8px] text-emerald-400 font-mono font-bold">MY Dr.</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1 bg-neutral-800 p-1.5 rounded-lg">
+              <div class="bg-emerald-400/90 h-5 rounded flex items-center justify-center text-[8px] font-bold text-neutral-900 shadow-sm">BALM</div>
+              <div class="bg-green-600 h-5 rounded flex items-center justify-center text-[8px] font-bold text-white shadow-sm">RELIEF</div>
+            </div>
+            <div class="h-4 bg-neutral-950 rounded flex items-center justify-center border border-neutral-800">
+              <div class="w-8 h-1 bg-green-500 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Value Badges -->
+        <div class="grid grid-cols-2 gap-3 pb-2">
+          <div class="bg-white p-3 rounded-2xl shadow-card border border-gray-100 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-green-50 text-[#16A34A] flex items-center justify-center shrink-0">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="font-display font-bold text-xs text-neutral-800 block">Instant Dispense</span>
+              <span class="text-[10px] text-neutral-400">Auto-drop in 3s</span>
+            </div>
+          </div>
+          <div class="bg-white p-3 rounded-2xl shadow-card border border-gray-100 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-green-50 text-[#16A34A] flex items-center justify-center shrink-0">
+              <i data-lucide="qr-code" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="font-display font-bold text-xs text-neutral-800 block">UPI Auto-Verify</span>
+              <span class="text-[10px] text-neutral-400">Dynamic QR code</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: MENU SCREEN ==================== -->
+      <section id="view-menu" class="min-h-full p-5 pb-24 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 id="label-menu-title" class="font-display font-extrabold text-xl text-neutral-900">Our <span class="text-[#16A34A]">Menu</span></h2>
+            <p id="label-menu-subtitle" class="text-xs text-neutral-500">Choose your item</p>
+          </div>
+          <button onclick="switchTab('home')" class="px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold flex items-center gap-1 transition">
+            <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input id="search-input" type="text" oninput="filterMenu()" placeholder="Search item or slot (e.g. P1, Balm)..." class="w-full bg-neutral-50 border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#16A34A]/40" />
+        </div>
+
+        <!-- Category Pills (kept for compatibility, single category) -->
+        <div id="category-pills" class="flex gap-2 overflow-x-auto no-scrollbar hidden"></div>
+
+        <!-- Products Grid -->
+        <div id="products-grid" class="grid grid-cols-2 gap-3">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: CART SCREEN ==================== -->
+      <section id="view-cart" class="min-h-full p-5 pb-10 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display font-extrabold text-xl text-neutral-900">Your <span class="text-[#16A34A]">Cart</span></h2>
+            <p class="text-xs text-neutral-500">Review items before payment</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="clear-cart-btn" onclick="clearCart()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition hidden">Clear</button>
+            <button onclick="switchTab('menu')" class="px-3 py-1.5 rounded-xl bg-neutral-100 text-neutral-700 text-xs font-bold hover:bg-neutral-200 transition">Menu</button>
+          </div>
+        </div>
+
+        <div id="cart-items-container" class="space-y-2.5"></div>
+
+        <div id="cart-summary-card" class="bg-neutral-50 rounded-2xl p-4 border border-gray-200 space-y-2 text-xs hidden">
+          <div class="flex justify-between text-neutral-600">
+            <span>Subtotal</span>
+            <span id="cart-subtotal" class="font-bold text-neutral-900">₹0</span>
+          </div>
+          <div class="flex justify-between text-neutral-600">
+            <span>Tax (<span id="tax-percent-display">5</span>%)</span>
+            <span id="cart-tax" class="font-bold text-neutral-900">₹0</span>
+          </div>
+          <div class="border-t border-gray-200 pt-2 flex justify-between text-sm font-display font-extrabold text-neutral-900">
+            <span>Total Payable</span>
+            <span id="cart-total" class="text-[#16A34A]">₹0</span>
+          </div>
+        </div>
+
+        <div id="checkout-btn-wrapper" class="hidden pt-1">
+          <button onclick="proceedToPayment()" class="w-full green-gradient text-white font-display font-bold text-sm py-3.5 rounded-2xl shadow-green flex items-center justify-center gap-2 hover:opacity-95 transition">
+            Proceed to UPI Payment <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: PAYMENT SCREEN ==================== -->
+      <section id="view-payment" class="min-h-full p-5 pb-10 flex flex-col items-center justify-between text-center hidden">
+        <div class="w-full flex items-center justify-between">
+          <button onclick="switchTab('cart')" class="px-3 py-1.5 rounded-xl bg-neutral-100 text-neutral-700 text-xs font-bold flex items-center gap-1">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back
+          </button>
+          <span class="text-xs font-bold text-[#16A34A] bg-green-50 px-3 py-1 rounded-full">Awaiting Payment</span>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 shadow-card border border-gray-100 w-full max-w-[320px] space-y-3 my-4">
+          <p id="qr-amount-text" class="font-display font-extrabold text-2xl text-neutral-900">Amount: ₹0</p>
+          <p id="upi-id-display" class="text-[11px] font-mono text-neutral-500">UPI: yourname@upi</p>
+          <div class="w-52 h-52 mx-auto bg-neutral-50 rounded-2xl p-2 border border-gray-200 flex items-center justify-center">
+            <img id="upi-qr-image" src="" alt="UPI QR Code" class="w-full h-full object-contain rounded-xl" />
+          </div>
+          <p class="text-[11px] text-neutral-500">Scan with any UPI app (GPay, PhonePe, Paytm, BHIM)</p>
+        </div>
+
+        <div class="w-full space-y-2">
+          <div class="flex items-center justify-center gap-2 text-xs text-neutral-500 py-1">
+            <span class="w-2 h-2 rounded-full bg-[#16A34A] animate-ping"></span>
+            <span>Listening for payment confirmation...</span>
+          </div>
+          <button onclick="simulatePaymentSuccess()" class="w-full bg-neutral-900 text-white text-xs font-bold py-3 rounded-2xl hover:bg-neutral-800 transition">
+            Simulate Payment Received (Test Dispense)
+          </button>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 5: DISPENSE SCREEN ==================== -->
+      <section id="view-dispense" class="min-h-full p-5 pb-10 flex flex-col items-center justify-center text-center space-y-6 hidden">
+        <div class="w-20 h-20 rounded-3xl green-gradient text-white flex items-center justify-center shadow-green animate-bounce">
+          <i data-lucide="package-check" class="w-10 h-10"></i>
+        </div>
+        <div class="space-y-1.5">
+          <h2 id="dispense-status-label" class="font-display font-extrabold text-xl text-neutral-900">Preparing Dispense...</h2>
+          <p id="dispense-sub-label" class="text-xs text-neutral-500">Please collect your items from the tray below</p>
+        </div>
+        <div class="w-full max-w-[300px] bg-neutral-100 h-3 rounded-full overflow-hidden border border-gray-200">
+          <div id="dispense-progress-bar" class="h-full green-gradient transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <button id="dispense-done-btn" onclick="finishOrderSession()" class="px-6 py-3 rounded-2xl bg-neutral-900 text-white text-xs font-bold hidden">
+          Done &amp; Return Home
+        </button>
+      </section>
+
+      <!-- ==================== TAB 6: ADMIN SCREEN ==================== -->
+      <section id="view-admin" class="min-h-full p-5 pb-10 space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display font-extrabold text-xl text-neutral-900">Admin <span class="text-[#16A34A]">Panel</span></h2>
+            <p class="text-xs text-neutral-500">Manage photo URLs, pricing &amp; kiosk settings</p>
+          </div>
+          <button onclick="exitAdminMode()" class="px-3 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold">
+            Exit Admin
+          </button>
+        </div>
+
+        <!-- Settings & Photo URL Card -->
+        <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 space-y-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-neutral-700 block">Branding &amp; Tax Settings</span>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Home Logo Photo URL</label>
+            <input id="admin-logo-url" type="text" placeholder="https://example.com/logo.png" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Tax Percentage (%)</label>
+            <input id="admin-tax-percent" type="number" min="0" max="100" step="0.5" placeholder="5" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-neutral-600 mb-1">Master Dashboard Sync URL (Optional)</label>
+            <div class="flex gap-1.5">
+              <input id="admin-external-url" type="text" placeholder="https://example.com/menu.json" class="w-full border border-gray-200 rounded-xl px-2.5 py-2 text-xs font-mono text-neutral-800" />
+              <button onclick="syncFromMasterDashboard()" class="px-3 py-2 rounded-xl bg-neutral-900 text-white text-xs font-bold shrink-0">Sync</button>
+            </div>
+          </div>
+          <button onclick="saveAdminSettings()" class="w-full green-gradient text-white font-display font-bold text-xs py-2.5 rounded-xl shadow-green">
+            Save Branding &amp; Tax Settings
+          </button>
+        </div>
+
+        <!-- Individual Menu Items Photo URLs -->
+        <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-neutral-700">Individual Menu Photo URLs</span>
+            <button onclick="addNewProductModal()" class="px-2.5 py-1 rounded-lg bg-green-50 text-[#16A34A] text-[11px] font-bold hover:bg-green-100 transition">+ Add Item</button>
+          </div>
+          <div id="admin-products-list" class="space-y-3"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Bottom Cart Bar (Visible in Menu/Home when items > 0) -->
+    <div id="floating-cart-bar" class="px-5 py-3 bg-white/95 backdrop-blur-md border-t border-gray-100 shrink-0 z-30 hidden">
+      <button onclick="switchTab('cart')" class="w-full green-gradient text-white font-display font-bold text-sm py-3.5 px-5 rounded-2xl shadow-green flex items-center justify-between hover:opacity-95 transition transform active:scale-95">
+        <div class="flex items-center gap-2">
+          <span id="floating-cart-count" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">0</span>
+          <span>View Cart &amp; Checkout</span>
+        </div>
+        <span id="floating-cart-total" class="font-extrabold">₹0</span>
+      </button>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap"></div>
+
+    <!-- Admin PIN Lock Modal -->
+    <div id="admin-lock-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[340px] space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display font-extrabold text-base text-neutral-900">Admin Access</h3>
+          <button onclick="closeAdminLockModal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="text-xs text-neutral-500">Enter admin PIN to manage photo URLs, pricing &amp; kiosk settings (Default PIN: <span class="font-mono font-bold">1234</span>).</p>
+        <input id="admin-pin-input" type="password" maxlength="6" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') verifyAdminPin()" class="w-full border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-[#16A34A]" />
+        <p id="admin-pin-error" class="text-[11px] text-red-600 font-semibold hidden">Incorrect PIN. Try 1234.</p>
+        <button onclick="verifyAdminPin()" class="w-full green-gradient text-white font-display font-bold text-sm py-3 rounded-2xl shadow-green">
+          Unlock Admin Panel
+        </button>
+      </div>
+    </div>
+
+    <!-- ESP32 Status Modal -->
+    <div id="esp32-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[340px] space-y-3 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display font-extrabold text-base text-neutral-900">ESP32 IoT Controller</h3>
+          <button onclick="closeEsp32Modal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="text-xs text-neutral-600">Status: <span class="text-emerald-600 font-bold">Connected &amp; Ready</span></p>
+        <p class="text-[11px] text-neutral-500 font-mono">Relay Board: 6-Slot Coil Driver Active</p>
+        <button onclick="closeEsp32Modal()" class="w-full bg-neutral-900 text-white text-xs font-bold py-2.5 rounded-2xl">Close</button>
+      </div>
+    </div>
+
+    <!-- Admin Add / Edit Item Modal -->
+    <div id="admin-item-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 hidden items-center justify-center p-5">
+      <div class="bg-white rounded-3xl p-5 w-full max-w-[350px] space-y-3.5 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 id="admin-item-modal-title" class="font-display font-extrabold text-base text-neutral-900">Add Menu Item</h3>
+          <button onclick="closeAdminItemModal()" class="p-1.5 rounded-xl bg-neutral-100 text-neutral-600 hover:bg-neutral-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <input id="admin-item-id" type="hidden" />
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Item Name</label>
+          <input id="admin-item-name" type="text" placeholder="e.g. MY Dr. Pain Balm" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Slot Code</label>
+            <input id="admin-item-slot" type="text" placeholder="e.g. P7" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Price (₹)</label>
+            <input id="admin-item-price" type="number" min="0" step="1" placeholder="32" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-600 uppercase mb-1">Individual Photo URL</label>
+          <input id="admin-item-image" type="text" placeholder="https://example.com/item.jpg or 15989.jpg" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button onclick="closeAdminItemModal()" class="flex-1 py-2.5 rounded-2xl bg-neutral-100 text-neutral-700 text-xs font-bold hover:bg-neutral-200 transition">Cancel</button>
+          <button onclick="saveAdminItemModal()" class="flex-1 py-2.5 rounded-2xl green-gradient text-white font-display font-bold text-xs shadow-green">Save Item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Replace "yourname@upi" below with your real Merchant UPI ID (e.g. "yourshop@okicici")
+    const DEFAULT_UPI_ID = "9985656800-2@ybl";
+    const merchantUpiId = DEFAULT_UPI_ID;
+
+    // Optional Firebase Realtime Database URL (e.g. "https://your-project-default-rtdb.firebaseio.com")
+    const DEFAULT_FIREBASE_DB_URL = "";
+
+    const STORAGE_KEY_PRODUCTS = "vendupro_products_v1";
+    const STORAGE_KEY_CART = "vendupro_cart_v1";
+    const STORAGE_KEY_SETTINGS = "vendupro_settings_v1";
+    const ADMIN_PIN = "1234";
+
+    const DEFAULT_PRODUCTS = [
+      { id: "p1", slot: "P1", name: "MY Dr. Pain Balm", price: 32, category: "MY Dr.", image: "15996.jpg" },
+      { id: "p2", slot: "P2", name: "MY Dr. Relief Roll-On", price: 32, category: "MY Dr.", image: "15995.webp" },
+      { id: "p3", slot: "P3", name: "MY Dr. Ortho Oil", price: 32, category: "MY Dr.", image: "15993.webp" },
+      { id: "p4", slot: "P4", name: "MY Dr. Muscle Patch", price: 32, category: "MY Dr.", image: "15991.jpg" },
+      { id: "p5", slot: "P5", name: "MY Dr. Joint Care Gel", price: 32, category: "MY Dr.", image: "15990.jpg" },
+      { id: "p6", slot: "P6", name: "MY Dr. Hot Compress", price: 32, category: "MY Dr.", image: "15989.jpg" }
+    ];
+
+    const DEFAULT_SETTINGS = {
+      logoUrl: "15985_2.jpg",
+      taxPercent: 5,
+      externalSyncUrl: "",
+      firebaseDbUrl: DEFAULT_FIREBASE_DB_URL
+    };
+
+    let products = [];
+    let cart = [];
+    let settings = { ...DEFAULT_SETTINGS };
+    let currentTab = "home";
+    let dispenseTimer = null;
+
+    function showToast(message) {
+      try {
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.remove("opacity-0");
+        toast.classList.add("opacity-100");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => {
+          toast.classList.remove("opacity-100");
+          toast.classList.add("opacity-0");
+        }, 2400);
+      } catch (e) {
+        console.error("Toast error:", e);
+      }
+    }
+
+    function normalizeImageUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== "string") return "";
+      const trimmed = rawUrl.trim();
+      if (!trimmed) return "";
+
+      // Convert Google Drive /file/d/<ID>/view links to direct view links
+      const fileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (fileMatch && fileMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+      }
+
+      // Convert Google Drive ?id=<ID> links to direct view links
+      const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (trimmed.includes("drive.google.com") && idMatch && idMatch[1]) {
+        return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+      }
+
+      return trimmed;
+    }
+
+    function loadState() {
+      try {
+        const savedProducts = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+        products = savedProducts ? JSON.parse(savedProducts) : DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      } catch (e) {
+        products = DEFAULT_PRODUCTS.map(p => ({ ...p }));
+      }
+
+      try {
+        const savedCart = localStorage.getItem(STORAGE_KEY_CART);
+        cart = savedCart ? JSON.parse(savedCart) : [];
+      } catch (e) {
+        cart = [];
+      }
+
+      try {
+        const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        settings = savedSettings ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } : { ...DEFAULT_SETTINGS };
+      } catch (e) {
+        settings = { ...DEFAULT_SETTINGS };
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
+        localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(cart));
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+      } catch (e) {
+        console.error("Error saving state:", e);
+      }
+    }
+
+    function getFirebaseConfigEndpoint() {
+      const base = (settings.firebaseDbUrl || DEFAULT_FIREBASE_DB_URL || "").trim().replace(/\/+$/, "");
+      if (!base) return "";
+      return `${base}/kioskConfig.json`;
+    }
+
+    async function pullFirebaseConfig(silent = true) {
+      const endpoint = getFirebaseConfigEndpoint();
+      if (!endpoint) return;
+      try {
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data) return;
+
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          products = data.products;
+        }
+        if (data.settings && typeof data.settings === "object") {
+          settings = { ...settings, ...data.settings, firebaseDbUrl: settings.firebaseDbUrl || DEFAULT_FIREBASE_DB_URL };
+        }
+        saveState();
+        applyBrandingAndSettings();
+        renderMenu();
+        updateCartUI();
+        if (currentTab === "admin") renderAdminProducts();
+        if (!silent) showToast("Synced from Firebase!");
+      } catch (err) {
+        console.warn("Firebase pull failed:", err);
+        if (!silent) showToast("Firebase sync failed");
+      }
+    }
+
+    async function pushFirebaseConfig() {
+      const endpoint = getFirebaseConfigEndpoint();
+      if (!endpoint) return false;
+      try {
+        const payload = {
+          products,
+          settings: {
+            logoUrl: settings.logoUrl,
+            taxPercent: settings.taxPercent,
+            externalSyncUrl: settings.externalSyncUrl
+          },
+          updatedAt: Date.now()
+        };
+        const res = await fetch(endpoint, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return true;
+      } catch (err) {
+        console.warn("Firebase push failed:", err);
+        return false;
+      }
+    }
+
+    function applyBrandingAndSettings() {
+      const logoImg = document.getElementById("home-brand-logo");
+      const svgLogo = document.getElementById("mydr-svg-logo");
+      const normalizedLogo = normalizeImageUrl(settings.logoUrl || DEFAULT_SETTINGS.logoUrl);
+
+      if (logoImg) {
+        if (normalizedLogo) {
+          logoImg.src = normalizedLogo;
+          logoImg.style.display = "block";
+          if (svgLogo) svgLogo.classList.add("hidden");
+        } else {
+          logoImg.style.display = "none";
+          if (svgLogo) svgLogo.classList.remove("hidden");
+        }
+      }
+
+      const taxDisplay = document.getElementById("tax-percent-display");
+      if (taxDisplay) {
+        taxDisplay.textContent = Number(settings.taxPercent ?? 5);
+      }
+
+      const upiDisplay = document.getElementById("upi-id-display");
+      if (upiDisplay) {
+        upiDisplay.textContent = `UPI: ${merchantUpiId}`;
+      }
+    }
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      const views = ["home", "menu", "cart", "payment", "dispense", "admin"];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) {
+          if (v === tabName) el.classList.remove("hidden");
+          else el.classList.add("hidden");
+        }
+      });
+
+      const mainContainer = document.getElementById("main-container");
+      if (mainContainer) mainContainer.scrollTop = 0;
+
+      if (tabName === "menu") {
+        renderMenu();
+      } else if (tabName === "cart") {
+        renderCart();
+      } else if (tabName === "payment") {
+        renderPaymentQR();
+      } else if (tabName === "admin") {
+        populateAdminFields();
+        renderAdminProducts();
+      }
+
+      updateCartUI();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function filterMenu() {
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById("products-grid");
+      if (!grid) return;
+
+      const query = (document.getElementById("search-input")?.value || "").trim().toLowerCase();
+      const filtered = products.filter(item => {
+        if (!query) return true;
+        return (
+          (item.name && item.name.toLowerCase().includes(query)) ||
+          (item.slot && item.slot.toLowerCase().includes(query))
+        );
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 text-center py-10 text-neutral-400 text-xs">
+            No items match your search.
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const imgSrc = normalizeImageUrl(item.image) || "https://placehold.co/200x200/f0fdf4/16a34a?text=MY+Dr.";
+        return `
+          <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex flex-col justify-between gap-2.5">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-green-50 text-[#16A34A]">${item.slot || "ITEM"}</span>
+                <span class="font-display font-extrabold text-sm text-neutral-900">₹${Number(item.price || 0)}</span>
+              </div>
+              <div class="w-full h-24 rounded-xl bg-neutral-50 border border-gray-100 flex items-center justify-center overflow-hidden p-1.5">
+                <img src="${imgSrc}" alt="${item.name}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/200x200/f0fdf4/16a34a?text=MY+Dr.'" />
+              </div>
+              <h4 class="font-display font-bold text-xs text-neutral-800 mt-2 line-clamp-2 leading-snug">${item.name}</h4>
+            </div>
+            <button onclick="addToCart('${item.id}')" class="w-full green-gradient text-white font-display font-bold text-xs py-2 rounded-xl shadow-green hover:opacity-95 transition active:scale-95">
+              + Add to Cart
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function addToCart(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      const existing = cart.find(c => c.id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          id: prod.id,
+          slot: prod.slot,
+          name: prod.name,
+          price: Number(prod.price || 0),
+          image: prod.image,
+          qty: 1
+        });
+      }
+
+      saveState();
+      updateCartUI();
+      showToast(`${prod.name} added to cart`);
+    }
+
+    function updateCartQty(productId, delta) {
+      const idx = cart.findIndex(c => c.id === productId);
+      if (idx === -1) return;
+      cart[idx].qty += delta;
+      if (cart[idx].qty <= 0) {
+        cart.splice(idx, 1);
+      }
+      saveState();
+      renderCart();
+      updateCartUI();
+    }
+
+    function clearCart() {
+      cart = [];
+      saveState();
+      renderCart();
+      updateCartUI();
+      showToast("Cart cleared");
+    }
+
+    function getCartTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
+      const taxRate = Number(settings.taxPercent ?? 5) / 100;
+      const tax = Math.round(subtotal * taxRate);
+      const total = subtotal + tax;
+      const totalCount = cart.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+      return { subtotal, tax, total, totalCount };
+    }
+
+    function updateCartUI() {
+      const { total, totalCount } = getCartTotals();
+
+      const badge = document.getElementById("cart-badge");
+      if (badge) {
+        if (totalCount > 0) {
+          badge.textContent = totalCount;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      const floatingBar = document.getElementById("floating-cart-bar");
+      const floatingCount = document.getElementById("floating-cart-count");
+      const floatingTotal = document.getElementById("floating-cart-total");
+
+      if (floatingBar) {
+        const showFloating = totalCount > 0 && (currentTab === "home" || currentTab === "menu");
+        if (showFloating) {
+          floatingBar.classList.remove("hidden");
+          if (floatingCount) floatingCount.textContent = `${totalCount} item${totalCount > 1 ? "s" : ""}`;
+          if (floatingTotal) floatingTotal.textContent = `₹${total}`;
+        } else {
+          floatingBar.classList.add("hidden");
+        }
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cart-items-container");
+      const summaryCard = document.getElementById("cart-summary-card");
+      const checkoutWrapper = document.getElementById("checkout-btn-wrapper");
+      const clearBtn = document.getElementById("clear-cart-btn");
+
+      if (!container) return;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-neutral-50 rounded-3xl border border-dashed border-gray-200 space-y-3">
+            <p class="text-xs text-neutral-500 font-medium">Your cart is empty.</p>
+            <button onclick="switchTab('menu')" class="px-4 py-2 rounded-xl green-gradient text-white text-xs font-bold shadow-green">
+              Browse Menu
+            </button>
+          </div>
+        `;
+        if (summaryCard) summaryCard.classList.add("hidden");
+        if (checkoutWrapper) checkoutWrapper.classList.add("hidden");
+        if (clearBtn) clearBtn.classList.add("hidden");
+        return;
+      }
+
+      if (clearBtn) clearBtn.classList.remove("hidden");
+      if (summaryCard) summaryCard.classList.remove("hidden");
+      if (checkoutWrapper) checkoutWrapper.classList.remove("hidden");
+
+      container.innerHTML = cart.map(item => {
+        const imgSrc = normalizeImageUrl(item.image) || "https://placehold.co/100x100/f0fdf4/16a34a?text=Item";
+        return `
+          <div class="bg-white rounded-2xl p-3 shadow-card border border-gray-100 flex items-center justify-between gap-3">
+            <img src="${imgSrc}" alt="${item.name}" class="w-12 h-12 rounded-xl object-contain bg-neutral-50 p-1 border border-gray-100 shrink-0" onerror="this.src='https://placehold.co/100x100/f0fdf4/16a34a?text=Item'" />
+            <div class="flex-1 min-w-0">
+              <span class="text-[10px] font-mono font-bold text-[#16A34A]">${item.slot || ""}</span>
+              <h4 class="font-display font-bold text-xs text-neutral-900 truncate">${item.name}</h4>
+              <p class="text-xs font-bold text-neutral-600">₹${Number(item.price || 0) * Number(item.qty || 1)}</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-neutral-100 hover:bg-neutral-200 font-bold text-xs flex items-center justify-center">-</button>
+              <span class="text-xs font-bold w-5 text-center">${item.qty}</span>
+              <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-green-50 hover:bg-green-100 text-[#16A34A] font-bold text-xs flex items-center justify-center">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const { subtotal, tax, total } = getCartTotals();
+      const subEl = document.getElementById("cart-subtotal");
+      const taxEl = document.getElementById("cart-tax");
+      const totEl = document.getElementById("cart-total");
+      const taxPctEl = document.getElementById("tax-percent-display");
+
+      if (subEl) subEl.textContent = `₹${subtotal}`;
+      if (taxEl) taxEl.textContent = `₹${tax}`;
+      if (totEl) totEl.textContent = `₹${total}`;
+      if (taxPctEl) taxPctEl.textContent = Number(settings.taxPercent ?? 5);
+    }
+
+    function proceedToPayment() {
+      if (cart.length === 0) {
+        showToast("Your cart is empty");
+        return;
+      }
+      switchTab("payment");
+    }
+
+    function renderPaymentQR() {
+      const { total } = getCartTotals();
+      const amountText = document.getElementById("qr-amount-text");
+      const upiText = document.getElementById("upi-id-display");
+      const qrImg = document.getElementById("upi-qr-image");
+
+      if (amountText) amountText.textContent = `Amount: ₹${total}`;
+      if (upiText) upiText.textContent = `UPI: ${merchantUpiId}`;
+
+      const upiUri = `upi://pay?pa=${encodeURIComponent(merchantUpiId)}&pn=${encodeURIComponent("MY Dr. Kiosk")}&am=${encodeURIComponent(total)}&cu=INR`;
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUri)}`;
+      }
+    }
+
+    function simulatePaymentSuccess() {
+      switchTab("dispense");
+      startDispenseSequence();
+    }
+
+    function startDispenseSequence() {
+      clearInterval(dispenseTimer);
+      const statusEl = document.getElementById("dispense-status-label");
+      const subEl = document.getElementById("dispense-sub-label");
+      const barEl = document.getElementById("dispense-progress-bar");
+      const doneBtn = document.getElementById("dispense-done-btn");
+
+      let progress = 0;
+      if (barEl) barEl.style.width = "0%";
+      if (doneBtn) doneBtn.classList.add("hidden");
+      if (statusEl) statusEl.textContent = "Dispensing Your Items...";
+      if (subEl) subEl.textContent = "Activating vending coils. Please wait.";
+
+      const slots = cart.map(c => c.slot).filter(Boolean).join(", ");
+      dispenseTimer = setInterval(() => {
+        progress += 20;
+        if (barEl) barEl.style.width = `${Math.min(progress, 100)}%`;
+
+        if (progress >= 100) {
+          clearInterval(dispenseTimer);
+          if (statusEl) statusEl.textContent = "Dispense Complete!";
+          if (subEl) subEl.textContent = slots ? `Collected from slot(s): ${slots}` : "Thank you for your purchase!";
+          if (doneBtn) doneBtn.classList.remove("hidden");
+          cart = [];
+          saveState();
+          updateCartUI();
+        }
+      }, 450);
+    }
+
+    function finishOrderSession() {
+      clearInterval(dispenseTimer);
+      switchTab("home");
+    }
+
+    // Admin PIN & Panel Functions
+    function openAdminLockModal() {
+      const modal = document.getElementById("admin-lock-modal");
+      const input = document.getElementById("admin-pin-input");
+      const err = document.getElementById("admin-pin-error");
+      if (err) err.classList.add("hidden");
+      if (input) {
+        input.value = "";
+        setTimeout(() => input.focus(), 50);
+      }
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeAdminLockModal() {
+      const modal = document.getElementById("admin-lock-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function verifyAdminPin() {
+      const input = document.getElementById("admin-pin-input");
+      const err = document.getElementById("admin-pin-error");
+      const val = (input?.value || "").trim();
+      if (val === ADMIN_PIN) {
+        closeAdminLockModal();
+        switchTab("admin");
+      } else {
+        if (err) err.classList.remove("hidden");
+      }
+    }
+
+    function exitAdminMode() {
+      switchTab("home");
+    }
+
+    function populateAdminFields() {
+      const logoInput = document.getElementById("admin-logo-url");
+      const taxInput = document.getElementById("admin-tax-percent");
+      const extInput = document.getElementById("admin-external-url");
+
+      if (logoInput) logoInput.value = settings.logoUrl || "";
+      if (taxInput) taxInput.value = Number(settings.taxPercent ?? 5);
+      if (extInput) extInput.value = settings.externalSyncUrl || settings.firebaseDbUrl || "";
+    }
+
+    async function saveAdminSettings() {
+      const logoInput = document.getElementById("admin-logo-url");
+      const taxInput = document.getElementById("admin-tax-percent");
+      const extInput = document.getElementById("admin-external-url");
+
+      settings.logoUrl = normalizeImageUrl(logoInput?.value || "");
+      const parsedTax = parseFloat(taxInput?.value);
+      settings.taxPercent = Number.isFinite(parsedTax) && parsedTax >= 0 ? parsedTax : 5;
+
+      const extVal = (extInput?.value || "").trim();
+      settings.externalSyncUrl = extVal;
+      if (extVal.includes("firebaseio.com")) {
+        settings.firebaseDbUrl = extVal;
+      }
+
+      saveState();
+      applyBrandingAndSettings();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Saved & synced to all phones!" : "Settings saved locally");
+    }
+
+    async function saveIndividualPhotoUrl(productId) {
+      const input = document.getElementById(`admin-photo-input-${productId}`);
+      const prod = products.find(p => p.id === productId);
+      if (!prod || !input) return;
+
+      prod.image = normalizeImageUrl(input.value);
+      input.value = prod.image;
+      saveState();
+      renderMenu();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? `${prod.slot} photo updated & synced!` : `${prod.slot} photo saved`);
+    }
+
+    function renderAdminProducts() {
+      const list = document.getElementById("admin-products-list");
+      if (!list) return;
+
+      if (products.length === 0) {
+        list.innerHTML = `<p class="text-xs text-neutral-400 text-center py-4">No menu items yet. Click + Add Item.</p>`;
+        return;
+      }
+
+      list.innerHTML = products.map(item => `
+        <div class="p-3 rounded-2xl bg-neutral-50 border border-gray-200 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-green-100 text-[#16A34A]">${item.slot}</span>
+              <span class="font-display font-bold text-xs text-neutral-900 ml-1">${item.name}</span>
+              <span class="text-xs font-semibold text-neutral-500 ml-1">• ₹${item.price}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="editProductModal('${item.id}')" class="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-neutral-700 text-[11px] font-bold hover:bg-neutral-100">Edit</button>
+              <button onclick="deleteProduct('${item.id}')" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-[11px] font-bold hover:bg-red-100">Delete</button>
+            </div>
+          </div>
+          <div class="flex gap-1.5">
+            <input id="admin-photo-input-${item.id}" type="text" value="${item.image || ""}" placeholder="Paste Photo URL or Google Drive link" class="flex-1 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-neutral-800 focus:outline-none focus:border-[#16A34A]" />
+            <button onclick="saveIndividualPhotoUrl('${item.id}')" class="px-3 py-1.5 rounded-xl bg-neutral-900 text-white text-[11px] font-bold shrink-0 hover:bg-neutral-800">Save URL</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function addNewProductModal() {
+      document.getElementById("admin-item-modal-title").textContent = "Add Menu Item";
+      document.getElementById("admin-item-id").value = "";
+      document.getElementById("admin-item-name").value = "";
+      document.getElementById("admin-item-slot").value = `P${products.length + 1}`;
+      document.getElementById("admin-item-price").value = "32";
+      document.getElementById("admin-item-image").value = "";
+
+      const modal = document.getElementById("admin-item-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function editProductModal(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      document.getElementById("admin-item-modal-title").textContent = "Edit Menu Item";
+      document.getElementById("admin-item-id").value = prod.id;
+      document.getElementById("admin-item-name").value = prod.name || "";
+      document.getElementById("admin-item-slot").value = prod.slot || "";
+      document.getElementById("admin-item-price").value = prod.price ?? 0;
+      document.getElementById("admin-item-image").value = prod.image || "";
+
+      const modal = document.getElementById("admin-item-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeAdminItemModal() {
+      const modal = document.getElementById("admin-item-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    async function saveAdminItemModal() {
+      const idVal = document.getElementById("admin-item-id").value.trim();
+      const nameVal = document.getElementById("admin-item-name").value.trim();
+      const slotVal = document.getElementById("admin-item-slot").value.trim() || `P${products.length + 1}`;
+      const priceVal = parseFloat(document.getElementById("admin-item-price").value);
+      const imgVal = normalizeImageUrl(document.getElementById("admin-item-image").value);
+
+      if (!nameVal) {
+        showToast("Please enter an item name");
+        return;
+      }
+
+      const cleanPrice = Number.isFinite(priceVal) && priceVal >= 0 ? priceVal : 0;
+
+      if (idVal) {
+        const idx = products.findIndex(p => p.id === idVal);
+        if (idx !== -1) {
+          products[idx] = {
+            ...products[idx],
+            name: nameVal,
+            slot: slotVal,
+            price: cleanPrice,
+            image: imgVal || products[idx].image
+          };
+        }
+      } else {
+        products.push({
+          id: "p_" + Date.now(),
+          slot: slotVal,
+          name: nameVal,
+          price: cleanPrice,
+          category: "MY Dr.",
+          image: imgVal || "15989.jpg"
+        });
+      }
+
+      saveState();
+      renderAdminProducts();
+      renderMenu();
+      closeAdminItemModal();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Item saved & synced!" : "Item saved");
+    }
+
+    async function deleteProduct(productId) {
+      products = products.filter(p => p.id !== productId);
+      cart = cart.filter(c => c.id !== productId);
+      saveState();
+      renderAdminProducts();
+      renderMenu();
+      updateCartUI();
+      const pushed = await pushFirebaseConfig();
+      showToast(pushed ? "Item deleted & synced!" : "Item deleted");
+    }
+
+    async function syncFromMasterDashboard() {
+      const urlInput = document.getElementById("admin-external-url");
+      const rawUrl = (urlInput?.value || settings.externalSyncUrl || "").trim();
+      if (!rawUrl) {
+        showToast("Enter a sync URL first");
+        return;
+      }
+
+      if (rawUrl.includes("firebaseio.com")) {
+        settings.firebaseDbUrl = rawUrl.replace(/\/+$/, "");
+        saveState();
+        await pullFirebaseConfig(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(rawUrl);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (Array.isArray(data.products)) {
+          products = data.products;
+          saveState();
+          renderMenu();
+          renderAdminProducts();
+          showToast("Menu synced from URL");
+        } else {
+          showToast("Invalid JSON format");
+        }
+      } catch (e) {
+        showToast("Could not fetch sync URL");
+      }
+    }
+
+    function openEsp32Modal() {
+      const modal = document.getElementById("esp32-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    }
+
+    function closeEsp32Modal() {
+      const modal = document.getElementById("esp32-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      applyBrandingAndSettings();
+      renderMenu();
+      updateCartUI();
+      if (window.lucide) lucide.createIcons();
+      pullFirebaseConfig(true);
+    });
+  </script>
 </body>
 </html>
